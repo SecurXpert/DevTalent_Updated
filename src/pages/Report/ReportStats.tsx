@@ -1,18 +1,58 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { FaArrowUp } from "react-icons/fa";
 
 type StatCard = {
   title: string;
-  value: string;
+  value: string | number;
   sub: string;
   color: "green" | "blue" | "purple";
 };
 
 type ReportStatsProps = {
-  statCards: StatCard[];
+  apiData?: any[];
 };
 
-const ReportStats: React.FC<ReportStatsProps> = ({ statCards }) => {
+const ReportStats: React.FC<ReportStatsProps> = ({ apiData }) => {
+  const statCards = useMemo<StatCard[]>(() => {
+    if (!apiData || apiData.length === 0) {
+      return [
+        { title: "Overall Pass Rate", value: "N/A", sub: "Loading...", color: "green" },
+        { title: "Avg. Participation", value: "N/A", sub: "Loading...", color: "blue" },
+        { title: "Avg. Exam Score", value: "N/A", sub: "Loading...", color: "purple" },
+      ];
+    }
+
+    const totalPassed = apiData.reduce((sum, item) => sum + (Number(item.total_exams_passed) || 0), 0);
+    const totalAttempted = apiData.reduce((sum, item) => sum + (Number(item.total_exams_attempted) || 0), 0);
+    const totalMapped = apiData.reduce((sum, item) => sum + (Number(item.total_exams_mapped) || 0), 0);
+    const sumAveragePercentage = apiData.reduce((sum, item) => sum + (Number(item.average_percentage) || 0), 0);
+
+    const overallPassRate = totalAttempted > 0 ? ((totalPassed / totalAttempted) * 100).toFixed(1) + "%" : "0%";
+    const avgParticipation = totalMapped > 0 ? ((totalAttempted / totalMapped) * 100).toFixed(1) + "%" : "0%";
+    const avgExamScore = apiData.length > 0 ? (sumAveragePercentage / apiData.length).toFixed(1) + "%" : "0%";
+
+    return [
+      {
+        title: "Overall Pass Rate",
+        value: overallPassRate,
+        sub: "Based on all exams",
+        color: "green",
+      },
+      {
+        title: "Avg. Participation",
+        value: avgParticipation,
+        sub: "Attempted vs Mapped",
+        color: "blue",
+      },
+      {
+        title: "Avg. Exam Score",
+        value: avgExamScore,
+        sub: "Average across students",
+        color: "purple",
+      },
+    ];
+  }, [apiData]);
+
   const getCardColor = (color: StatCard["color"]) => {
     switch (color) {
       case "green":

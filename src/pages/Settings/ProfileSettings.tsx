@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FiUser,
   FiMail,
@@ -19,10 +19,61 @@ import {
   FiGlobe,
   FiUpload,
 } from "react-icons/fi";
+import { BASE_URL } from "../../lib/api";
+import { PersonalInfo } from "../profileComponents";
 
 const ProfileSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("Personal Information");
   const [isEditing, setIsEditing] = useState(false);
+  const [profileData, setProfileData] = useState({
+    fullName: "Admin User",
+    email: "admin@devtalent.com",
+    phone: "",
+    role: "Platform Administrator",
+    location: "",
+    bio: "",
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token =
+          localStorage.getItem("adminToken") ||
+          localStorage.getItem("access_token") ||
+          localStorage.getItem("userToken");
+
+        if (!token) return;
+
+        const response = await fetch(`${BASE_URL}/auth/profile`, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const locParts = [data.city, data.state, data.country].filter(Boolean);
+          const locationVal = locParts.length > 0 ? locParts.join(", ") : "";
+
+          setProfileData({
+            fullName: data.name || "",
+            email: data.email || "",
+            phone: data.phone || "",
+            role: data.role || "Platform Administrator",
+            location: locationVal,
+            bio: data.bio || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching profile in ProfileSettings:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const [notifications, setNotifications] = useState<Record<string, boolean>>({
     email: true,
     newStudent: true,
@@ -100,7 +151,7 @@ const ProfileSettings: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         {/* Top Gradient Bar */}
         <div className="h-14 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 flex items-center px-6">
-          <h2 className="text-white text-lg font-semibold tracking-wide">Admin User</h2>
+          <h2 className="text-white text-lg font-semibold tracking-wide">{profileData.fullName}</h2>
         </div>
 
         <div className="p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -117,11 +168,11 @@ const ProfileSettings: React.FC = () => {
 
             {/* Info */}
             <div>
-              <h3 className="text-xl text-slate-700 font-medium mb-3">Platform Administrator</h3>
+              <h3 className="text-xl text-slate-700 font-medium mb-3">{profileData.role}</h3>
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-slate-500 text-sm">
                 <div className="flex items-center gap-2">
                   <FiMail size={16} />
-                  <span>admin@devtalent.com</span>
+                  <span>{profileData.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <FiCalendar size={16} />
@@ -131,13 +182,20 @@ const ProfileSettings: React.FC = () => {
             </div>
           </div>
 
-          <button 
-            onClick={() => setIsEditing(!isEditing)}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors shadow-sm self-start sm:self-auto"
-          >
-            <FiEdit2 size={16} />
-            {isEditing ? "Cancel Edit" : "Edit Profile"}
-          </button>
+          {!isEditing && (
+            <button 
+              onClick={() => {
+                if ((window as any).triggerPersonalInfoEdit) {
+                  (window as any).triggerPersonalInfoEdit();
+                  setIsEditing(true);
+                }
+              }}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 rounded-lg flex items-center gap-2 text-sm font-medium transition-colors shadow-sm self-start sm:self-auto"
+            >
+              <FiEdit2 size={16} />
+              Edit Profile
+            </button>
+          )}
         </div>
       </div>
 
@@ -161,133 +219,15 @@ const ProfileSettings: React.FC = () => {
 
         {/* Form Grid */}
         {activeTab === "Personal Information" && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Full Name</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiUser className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    defaultValue="Admin User"
-                    readOnly={!isEditing}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-slate-600 focus:outline-none transition-all text-sm ${
-                      !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Email Address</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiMail className="text-gray-400" />
-                  </div>
-                  <input
-                    type="email"
-                    defaultValue="admin@devtalent.com"
-                    readOnly={!isEditing}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-slate-600 focus:outline-none transition-all text-sm ${
-                      !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Phone Number</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiPhone className="text-gray-400" />
-                  </div>
-                  <input
-                    type="tel"
-                    defaultValue="+1 (555) 123-4567"
-                    readOnly={!isEditing}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-slate-600 focus:outline-none transition-all text-sm ${
-                      !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Role</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiShield className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    defaultValue="Platform Administrator"
-                    readOnly={!isEditing}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-slate-600 focus:outline-none transition-all text-sm ${
-                      !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Organization</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiBriefcase className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    defaultValue="DevTalent Inc."
-                    readOnly={!isEditing}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-slate-600 focus:outline-none transition-all text-sm ${
-                      !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700">Location</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiMapPin className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    defaultValue="San Francisco, CA"
-                    readOnly={!isEditing}
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-slate-600 focus:outline-none transition-all text-sm ${
-                      !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Bio</label>
-              <textarea
-                rows={4}
-                readOnly={!isEditing}
-                className={`w-full p-4 border border-gray-200 rounded-lg text-slate-600 focus:outline-none resize-none transition-all text-sm ${
-                  !isEditing ? "bg-gray-100 cursor-not-allowed" : "bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                }`}
-              ></textarea>
-            </div>
-
-            {isEditing && (
-              <div className="flex justify-end pt-4">
-                <button 
-                  onClick={() => setIsEditing(false)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm"
-                >
-                  Save Changes
-                </button>
-              </div>
-            )}
-          </div>
+          <PersonalInfo
+            initialData={profileData}
+            onUpdate={(newData) => {
+              setProfileData(newData);
+            }}
+            onEditingChange={(isEdit) => {
+              setIsEditing(isEdit);
+            }}
+          />
         )}
 
         {activeTab === "Security" && (

@@ -1,6 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { resultsData } from "../../data/resultsData";
+import { ResultData } from "../../data/resultsData";
+
+interface ResultsTableProps {
+  results: ResultData[];
+}
 
 const getColor = (percent: number) => {
   if (percent >= 80) return "bg-green-500";
@@ -9,14 +13,14 @@ const getColor = (percent: number) => {
   return "bg-red-500";
 };
 
-function ResultsTable() {
+function ResultsTable({ results }: ResultsTableProps) {
   const navigate = useNavigate();
   return (
     <div className="bg-gray-50 border border-gray-200 rounded-2xl shadow-sm mt-6">
       {/* Header */}
       <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-800">Results List</h2>
-        <span className="text-sm text-gray-500">Showing 8 of 8 results</span>
+        <span className="text-sm text-gray-500">Showing {results.length} results</span>
       </div>
 
       {/* Table */}
@@ -51,7 +55,7 @@ function ResultsTable() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {resultsData.map((item, index) => (
+            {results.map((item, index) => (
               <tr
                 key={index}
                 className="border-t border-gray-200 hover:bg-gray-50"

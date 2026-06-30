@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import ReportHeader from "./ReportHeader";
 import ReportStats from "./ReportStats";
 import ParticipationChart from "./ParticipationChart";
@@ -8,13 +8,7 @@ import MonthlyActivityChart from "./MonthlyActivityChart";
 import CoursePerformanceChart from "./CoursePerformanceChart";
 import DetailedStatsTable from "./DetailedStatsTable";
 import DetailedStatsCards from "./DetailedStatsCards";
-
-type StatCard = {
-  title: string;
-  value: string;
-  sub: string;
-  color: "green" | "blue" | "purple";
-};
+import { fetchCoursePerformance, fetchCoursePerformanceSummary } from "../../lib/api";
 
 type CourseRow = {
   course: string;
@@ -29,107 +23,54 @@ const Report: React.FC = () => {
   const [minPassRate, setMinPassRate] = useState<string>("0");
   const [error, setError] = useState("");
 
-  const statCards: StatCard[] = [
-    {
-      title: "Overall Pass Rate",
-      value: "87.8%",
-      sub: "3.2% from last month",
-      color: "green",
-    },
-    {
-      title: "Avg. Participation",
-      value: "82%",
-      sub: "5% from last month",
-      color: "blue",
-    },
-    {
-      title: "Total Exams Conducted",
-      value: "360",
-      sub: "This year",
-      color: "blue",
-    },
-    {
-      title: "Avg. Exam Score",
-      value: "78.5%",
-      sub: "2.1% from last month",
-      color: "purple",
-    },
-  ];
+  const [tableData, setTableData] = useState<CourseRow[]>([]);
+  const [apiData, setApiData] = useState<any[]>([]);
 
-  const participationData = [
-    { month: "Sep", value: 78 },
-    { month: "Oct", value: 82 },
-    { month: "Nov", value: 75 },
-    { month: "Dec", value: 70 },
-    { month: "Jan", value: 85 },
-    { month: "Feb", value: 88 },
-    { month: "Mar", value: 86 },
-  ];
+  useEffect(() => {
+    const loadReportData = async () => {
+      try {
+        const [performanceData, summaryData] = await Promise.all([
+          fetchCoursePerformance({}),
+          fetchCoursePerformanceSummary({}),
+        ]);
 
-  const successData = [
-    { name: "Pass", value: 745, label: "Pass: 745 (88%)" },
-    { name: "Fail", value: 103, label: "Fail: 103 (12%)" },
-  ];
+        // Process performanceData for charts/ReportStats
+        const perfArr = Array.isArray(performanceData)
+          ? performanceData
+          : (Array.isArray(performanceData?.items)
+              ? performanceData.items
+              : (Array.isArray(performanceData?.data)
+                  ? performanceData.data
+                  : []));
+        setApiData(perfArr);
 
-  const avgPerformanceData = [
-    { month: "Sep", avgScore: 72, passRate: 78 },
-    { month: "Oct", avgScore: 74, passRate: 81 },
-    { month: "Nov", avgScore: 72, passRate: 79 },
-    { month: "Dec", avgScore: 78, passRate: 85 },
-    { month: "Jan", avgScore: 80, passRate: 88 },
-    { month: "Feb", avgScore: 82, passRate: 90 },
-    { month: "Mar", avgScore: 81, passRate: 87 },
-  ];
+        // Process summaryData for table/DetailedStatsCards
+        const summaryArr = Array.isArray(summaryData)
+          ? summaryData
+          : (Array.isArray(summaryData?.items)
+              ? summaryData.items
+              : (Array.isArray(summaryData?.data)
+                  ? summaryData.data
+                  : []));
 
-  const monthlyActivityData = [
-    { month: "Sep", exams: 45 },
-    { month: "Oct", exams: 52 },
-    { month: "Nov", exams: 48 },
-    { month: "Dec", exams: 40 },
-    { month: "Jan", exams: 58 },
-    { month: "Feb", exams: 62 },
-    { month: "Mar", exams: 55 },
-  ];
+        if (summaryArr && summaryArr.length > 0) {
+          const newTableData = summaryArr.map((item: any) => ({
+            course: item.course_name || `Course ${item.course_id}`,
+            students: Number(item.total_students_count) || 0,
+            exams: Number(item.exam_written_count) || 0,
+            avgScore: Number(Number(item.average_overall_percentage ?? item.average_score ?? 0).toFixed(1)),
+            passRate: Number(Number(item.pass_percentage || 0).toFixed(1)),
+          }));
 
-  const coursePerformanceData = [
-    { course: "Computer Science", avgScore: 82, students: 450 },
-    { course: "Data Science", avgScore: 78, students: 320 },
-    { course: "Software Eng.", avgScore: 85, students: 280 },
-    { course: "IT", avgScore: 75, students: 250 },
-    { course: "Cybersecurity", avgScore: 80, students: 180 },
-  ];
+          setTableData(newTableData);
+        }
+      } catch (err) {
+        console.error("Error fetching report data:", err);
+      }
+    };
 
-  const tableData: CourseRow[] = [
-    {
-      course: "Computer Science",
-      students: 450,
-      exams: 47,
-      avgScore: 82,
-      passRate: 90,
-    },
-    {
-      course: "Data Science",
-      students: 320,
-      exams: 43,
-      avgScore: 78,
-      passRate: 86,
-    },
-    {
-      course: "Software Eng.",
-      students: 280,
-      exams: 49,
-      avgScore: 85,
-      passRate: 92,
-    },
-    { course: "IT", students: 250, exams: 36, avgScore: 75, passRate: 92 },
-    {
-      course: "Cybersecurity",
-      students: 180,
-      exams: 44,
-      avgScore: 80,
-      passRate: 88,
-    },
-  ];
+    loadReportData();
+  }, []);
 
   const filteredRows = useMemo(() => {
     const value = Number(minPassRate);
@@ -142,27 +83,27 @@ const Report: React.FC = () => {
       const matchesPassRate = row.passRate >= value;
       return matchesSearch && matchesPassRate;
     });
-  }, [search, minPassRate]);
+  }, [search, minPassRate, tableData]);
 
   return (
     <div className="min-h-screen bg-[#f5f3ff] px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 md:py-5 lg:py-6">
       <div className="max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:max-w-[1400px] mx-auto">
         <ReportHeader />
-        <ReportStats statCards={statCards} />
+        <ReportStats apiData={apiData} />
 
         {/* First Row Charts */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 mb-6">
-          <ParticipationChart participationData={participationData} />
-          <SuccessRateChart successData={successData} />
+          <ParticipationChart apiData={apiData} />
+          <SuccessRateChart apiData={apiData} />
         </div>
 
         {/* Second Row Charts */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 gap-6 mb-6">
-          <PerformanceChart avgPerformanceData={avgPerformanceData} />
-          <MonthlyActivityChart monthlyActivityData={monthlyActivityData} />
+          <PerformanceChart apiData={apiData} />
+          <MonthlyActivityChart apiData={apiData} />
         </div>
 
-        <CoursePerformanceChart coursePerformanceData={coursePerformanceData} />
+        <CoursePerformanceChart apiData={apiData} />
         <DetailedStatsTable filteredRows={filteredRows} />
         <DetailedStatsCards filteredRows={filteredRows} />
       </div>

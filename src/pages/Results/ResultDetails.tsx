@@ -102,11 +102,10 @@ const ProblemCard: React.FC<ProblemCardProps> = ({
 
             <div className="mt-5">
               <span
-                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[15px] font-semibold border ${
-                  isPassed
-                    ? "bg-[#e8f9ee] text-[#15803d] border-[#b8ebc9]"
-                    : "bg-[#fff5dd] text-[#c67b00] border-[#f4d68a]"
-                }`}
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[15px] font-semibold border ${isPassed
+                  ? "bg-[#e8f9ee] text-[#15803d] border-[#b8ebc9]"
+                  : "bg-[#fff5dd] text-[#c67b00] border-[#f4d68a]"
+                  }`}
               >
                 {isPassed ? (
                   <CheckCircle2 className="h-5 w-5" />
@@ -383,11 +382,10 @@ const ResultDetails: React.FC = () => {
           return (
             <div
               key={i}
-              className={`p-4 mb-4 rounded-xl border ${
-                isWrong
-                  ? "bg-red-50 border-red-300"
-                  : "bg-green-50 border-green-300"
-              }`}
+              className={`p-4 mb-4 rounded-xl border ${isWrong
+                ? "bg-red-50 border-red-300"
+                : "bg-green-50 border-green-300"
+                }`}
             >
               <div className="flex flex-col sm:flex-row sm:justify-between gap-3">
                 <div className="flex items-center gap-2">

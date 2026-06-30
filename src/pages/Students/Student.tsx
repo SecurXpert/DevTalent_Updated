@@ -143,7 +143,7 @@ const Page: React.FC = () => {
     (async () => {
       try {
         const data = await fetchStudents();
-        setStudents(data);
+        setStudents(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error("Failed to load students", e);
       } finally {

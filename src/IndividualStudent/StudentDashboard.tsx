@@ -383,8 +383,7 @@ const StudentDashboard = () => {
               <div className="text-center mt-5">
                 <button
                   onClick={() => {
-                    localStorage.setItem("selectedCourseId", "1");
-                    navigate("/individualterms/1");
+                    navigate("/technical");
                     window.scrollTo(0, 0);
                   }}
                   className="text-purple-600 font-medium hover:underline"
@@ -444,8 +443,7 @@ const StudentDashboard = () => {
               <div className="text-center mt-6">
                 <button
                   onClick={() => {
-                    localStorage.setItem("selectedCourseId", "2");
-                    navigate("/individualterms/2");
+                    navigate("/non-technical");
                     window.scrollTo(0, 0);
                   }}
                   className="text-purple-600 font-medium hover:underline"
@@ -669,6 +667,20 @@ const StudentDashboard = () => {
                 <div className="flex items-center gap-3">
                   <BarChart3 className="text-purple-600 w-5 h-5" />
                   <p className="font-medium text-gray-800">Course selection</p>
+                </div>
+                <ChevronRight className="text-purple-500 w-5 h-5" />
+              </div>
+
+              <div
+                className="flex items-center justify-between bg-gray-50 border rounded-xl px-4 py-3 hover:bg-purple-50 transition cursor-pointer"
+                onClick={() => {
+                  navigate("/student-results");
+                  window.scrollTo(0, 0);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="text-purple-600 w-5 h-5" />
+                  <p className="font-medium text-gray-800">Results</p>
                 </div>
                 <ChevronRight className="text-purple-500 w-5 h-5" />
               </div>

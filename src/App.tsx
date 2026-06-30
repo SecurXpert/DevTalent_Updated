@@ -23,9 +23,12 @@ import MCQPaper from "./pages/MCQPaper";
 import Login from "./pages/Login";
 import ImpactSection from "./pages/ImpactSection";
 import Subscription from "./IndividualStudent/Subscription";
+import Summary from "./IndividualStudent/Summary";
 import StudentDashboard from "./IndividualStudent/StudentDashboard";
 import Profile from "./IndividualStudent/Profile";
 import Individual from "./IndividualStudent/Individual";
+import Technical from "./IndividualStudent/Technical";
+import NonTechnical from "./IndividualStudent/NonTechnical";
 import Register from "./IndividualStudent/Register";
 import ForgotPassword from "./pages/Forgotpassword";
 import Success1 from "./IndividualStudent/Success1";
@@ -35,6 +38,8 @@ import Payments from "./IndividualStudent/Payments";
 import Certificate from "./pages/Certificate";
 import IndividualOverview from "./IndividualStudent/IndividualOverview";
 import IndividualTerms from "./IndividualStudent/IndividualTerms";
+import StudentResults from "./IndividualStudent/Results";
+import ViewScorecard from "./IndividualStudent/ViewScorecard";
 import UpgradePage from "./pages/UpgradePage";
 import Adminlogin from "./pages/Adminlogin";
 import AdminDashboard from "./pages/Dashboard/AdminDashboard";
@@ -106,10 +111,15 @@ const App = () => (
           <Route path="/individualoverview/:courseId" element={<IndividualOverview />} />
           <Route path="/individualterms" element={<IndividualTerms />} />
           <Route path="/individualterms/:courseId" element={<IndividualTerms />} />
+          <Route path="/student-results" element={<StudentResults />} />
+          <Route path="/scorecard" element={<ViewScorecard />} />
           <Route path="/upgrade" element={<UpgradePage />} />
           <Route path="/adminlogin" element={<Adminlogin />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/subscription" element={<Subscription />} /> 
+          <Route path="/summary" element={<Summary />} />
+          <Route path="/technical" element={<Technical />} />
+          <Route path="/non-technical" element={<NonTechnical />} />
 
           <Route
             path="/student/:id"

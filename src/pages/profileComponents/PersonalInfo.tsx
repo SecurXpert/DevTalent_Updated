@@ -15,7 +15,6 @@ interface ProfileData {
   email: string;
   phone: string;
   role: string;
-  organization: string;
   location: string;
   bio: string;
 }
@@ -28,9 +27,10 @@ interface ValidationError {
 interface PersonalInfoProps {
   initialData: ProfileData;
   onUpdate: (data: ProfileData) => void;
+  onEditingChange?: (isEditing: boolean) => void;
 }
 
-const PersonalInfo = ({ initialData, onUpdate }: PersonalInfoProps) => {
+const PersonalInfo = ({ initialData, onUpdate, onEditingChange }: PersonalInfoProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>(initialData);
   const [tempData, setTempData] = useState<ProfileData>(initialData);
@@ -43,6 +43,14 @@ const PersonalInfo = ({ initialData, onUpdate }: PersonalInfoProps) => {
     setTempData(initialData);
     setValidationErrors([]);
   }, [initialData]);
+
+
+
+  useEffect(() => {
+    if (onEditingChange) {
+      onEditingChange(isEditing);
+    }
+  }, [isEditing, onEditingChange]);
 
   useEffect(() => {
     (window as any).triggerPersonalInfoEdit = () => {
@@ -98,10 +106,7 @@ const PersonalInfo = ({ initialData, onUpdate }: PersonalInfoProps) => {
           return "Role must be less than 50 characters";
         return null;
 
-      case "organization":
-        if (value.trim() && value.trim().length > 100)
-          return "Organization name must be less than 100 characters";
-        return null;
+
 
       case "location":
         if (!value.trim()) return "Location is required";
@@ -140,7 +145,6 @@ const PersonalInfo = ({ initialData, onUpdate }: PersonalInfoProps) => {
 
     const optionalFields: (keyof ProfileData)[] = [
       "phone",
-      "organization",
       "bio",
     ];
 
@@ -309,26 +313,7 @@ const PersonalInfo = ({ initialData, onUpdate }: PersonalInfoProps) => {
           )}
         </div>
 
-        <div>
-          <InputField
-            label="Organization"
-            icon={<HiOutlineBuildingOffice2 />}
-            value={isEditing ? tempData.organization : profileData.organization}
-            placeholder={
-              isEditing ? "Enter organization name" : "No organization added"
-            }
-            readOnly={!isEditing}
-            onChange={(e) =>
-              isEditing && handleChange("organization", e.target.value)
-            }
-          />
-          {isEditing && getFieldError("organization") && (
-            <p className="mt-1 text-red-500 text-[11px] xs:text-[12px] flex items-center gap-1">
-              <HiOutlineExclamationCircle className="text-[12px] xs:text-[13px]" />
-              {getFieldError("organization")}
-            </p>
-          )}
-        </div>
+
 
         <div>
           <InputField
@@ -359,11 +344,10 @@ const PersonalInfo = ({ initialData, onUpdate }: PersonalInfoProps) => {
           value={isEditing ? tempData.bio : profileData.bio}
           onChange={(e) => isEditing && handleChange("bio", e.target.value)}
           placeholder={isEditing ? "Tell us about yourself..." : "No bio added"}
-          className={`w-full rounded-xl border px-3 xs:px-4 py-2 xs:py-3 outline-none text-[12px] xs:text-[14px] resize-none ${
-            isEditing && getFieldError("bio")
-              ? "border-red-300 bg-red-50 focus:border-red-500"
-              : "border-[#d6d9e0] bg-[#fbfbfd] focus:border-[#7c3aed]"
-          }`}
+          className={`w-full rounded-xl border px-3 xs:px-4 py-2 xs:py-3 outline-none text-[12px] xs:text-[14px] resize-none ${isEditing && getFieldError("bio")
+            ? "border-red-300 bg-red-50 focus:border-red-500"
+            : "border-[#d6d9e0] bg-[#fbfbfd] focus:border-[#7c3aed]"
+            }`}
           readOnly={!isEditing}
         />
         {isEditing && getFieldError("bio") && (

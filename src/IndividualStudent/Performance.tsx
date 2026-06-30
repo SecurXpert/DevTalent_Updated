@@ -22,8 +22,8 @@ const Performance = () => {
   const location = useLocation();
   const [allSubscriptions, setAllSubscriptions] = useState<any[]>([]);
   const [selectedSubscription, setSelectedSubscription] = useState<any>(null);
-  const [selectedPlan, setSelectedPlan] = useState("Single Course");
-  const [purchasedPlan, setPurchasedPlan] = useState("Single Course");
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [purchasedPlan, setPurchasedPlan] = useState("");
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
   const [lockedCourses, setLockedCourses] = useState<number[]>([]);
   const [coursesList, setCoursesList] = useState<any[]>([]);
@@ -219,6 +219,12 @@ const Performance = () => {
             </ul>
 
             <button
+              onClick={(e) => {
+                if (purchasedPlan !== "Single Course") {
+                  e.stopPropagation();
+                  navigate("/subscription");
+                }
+              }}
               className={`w-full py-3.5 rounded-xl font-medium transition-colors ${selectedPlan === "Single Course"
                 ? "bg-[#5b61f4] text-white hover:bg-indigo-600"
                 : "bg-indigo-50 text-[#5b61f4] hover:bg-indigo-100"
@@ -268,6 +274,12 @@ const Performance = () => {
             </ul>
 
             <button
+              onClick={(e) => {
+                if (purchasedPlan !== "Dual Course") {
+                  e.stopPropagation();
+                  navigate("/subscription");
+                }
+              }}
               className={`w-full py-3.5 rounded-xl font-medium transition-colors ${selectedPlan === "Dual Course"
                 ? "bg-[#5b61f4] text-white hover:bg-indigo-600"
                 : "bg-indigo-50 text-[#5b61f4] hover:bg-indigo-100"
@@ -313,6 +325,12 @@ const Performance = () => {
             </ul>
 
             <button
+              onClick={(e) => {
+                if (purchasedPlan !== "Multiple Courses") {
+                  e.stopPropagation();
+                  navigate("/subscription");
+                }
+              }}
               className={`w-full py-3.5 rounded-xl font-medium transition-colors ${selectedPlan === "Multiple Courses"
                 ? "bg-[#5b61f4] text-white hover:bg-indigo-600"
                 : "bg-indigo-50 text-[#5b61f4] hover:bg-indigo-100"

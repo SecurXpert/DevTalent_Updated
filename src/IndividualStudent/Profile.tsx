@@ -207,8 +207,24 @@ const Profile: React.FC = () => {
             const data = await subRes.json();
             if (Array.isArray(data)) {
               if (data.length > 0) {
-                latestSubIndex = data.length - 1;
-                latestSub = data[latestSubIndex];
+                let earliestSub = data[0];
+                let earliestIndex = 0;
+
+                for (let i = 1; i < data.length; i++) {
+                  const currentSub = data[i];
+                  if (currentSub.end_at && earliestSub.end_at) {
+                    if (new Date(currentSub.end_at).getTime() < new Date(earliestSub.end_at).getTime()) {
+                      earliestSub = currentSub;
+                      earliestIndex = i;
+                    }
+                  } else if (currentSub.end_at && !earliestSub.end_at) {
+                    earliestSub = currentSub;
+                    earliestIndex = i;
+                  }
+                }
+
+                latestSubIndex = earliestIndex;
+                latestSub = earliestSub;
                 setSubscriptionData(latestSub);
               }
             } else if (data) {

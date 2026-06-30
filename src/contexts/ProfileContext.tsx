@@ -5,7 +5,6 @@ interface ProfileData {
   email: string;
   phone: string;
   role: string;
-  organization: string;
   location: string;
   bio: string;
 }
@@ -21,7 +20,6 @@ const defaultProfileData: ProfileData = {
   email: "admin@devtalent.com",
   phone: "",
   role: "Platform Administrator",
-  organization: "",
   location: "San Francisco, CA",
   bio: "",
 };

@@ -54,7 +54,7 @@ const DetailedStatsCards: React.FC<DetailedStatsCardsProps> = ({ filteredRows })
                       Avg Score
                     </p>
                     <p className="font-medium text-[#111827] text-[10px] sm:text-[12px]">
-                      {row.avgScore}%
+                      {row.avgScore}
                     </p>
                   </div>
 

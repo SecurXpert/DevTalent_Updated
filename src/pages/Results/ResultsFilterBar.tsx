@@ -7,7 +7,25 @@ import {
   Calendar,
 } from "lucide-react";
 
-function ResultsFilterBar() {
+interface ResultsFilterBarProps {
+  searchQuery: string;
+  onSearchQueryChange: (query: string) => void;
+  selectedCourse: string;
+  onCourseChange: (course: string) => void;
+  selectedStatus: string;
+  onStatusChange: (status: string) => void;
+  courses: string[];
+}
+
+function ResultsFilterBar({
+  searchQuery,
+  onSearchQueryChange,
+  selectedCourse,
+  onCourseChange,
+  selectedStatus,
+  onStatusChange,
+  courses,
+}: ResultsFilterBarProps) {
   return (
     <div className=" mt-10 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
       {/* Top Section */}
@@ -21,6 +39,8 @@ function ResultsFilterBar() {
           <input
             type="text"
             placeholder="Search by student name or exam..."
+            value={searchQuery}
+            onChange={(e) => onSearchQueryChange(e.target.value)}
             className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
@@ -52,20 +72,31 @@ function ResultsFilterBar() {
         {/* Exam */}
         <div>
           <label className="text-sm text-gray-600 mb-1 block">Exam</label>
-          <select className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>All Courses</option>
-            <option>React</option>
-            <option>Java</option>
+          <select
+            value={selectedCourse}
+            onChange={(e) => onCourseChange(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="All Courses">All Courses</option>
+            {courses.map((course, idx) => (
+              <option key={idx} value={course}>
+                {course}
+              </option>
+            ))}
           </select>
         </div>
 
         {/* Status */}
         <div>
           <label className="text-sm text-gray-600 mb-1 block">Status</label>
-          <select className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option>All Status</option>
-            <option>Pass</option>
-            <option>Fail</option>
+          <select
+            value={selectedStatus}
+            onChange={(e) => onStatusChange(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="All Status">All Status</option>
+            <option value="Pass">Pass</option>
+            <option value="Fail">Fail</option>
           </select>
         </div>
 

@@ -107,7 +107,7 @@ npm run dev
 Create a `.env` file in the root directory:
 
 ```env
-VITE_API_BASE_URL=http://192.168.0.144:8000
+VITE_API_BASE_URL=http://192.168.0.103:8000
 VITE_FIREBASE_CONFIG=your_firebase_config
 ```
 

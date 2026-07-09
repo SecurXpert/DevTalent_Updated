@@ -6,6 +6,7 @@ import {
   FileText,
   Lock,
   BookOpen,
+  CheckSquare,
 } from "lucide-react";
 import SubscriptionHeader from "./SubscriptionHeader";
 import SubscriptionStats from "./SubscriptionStats";
@@ -36,9 +37,12 @@ type ActiveSubscriptionItem = {
   planType: string;
   startDate: string;
   endDate: string;
-  status: "Active" | "Pending";
+  status: string;
   amount: number;
+  mcqRemaining: number;
+  codingRemaining: number;
 };
+
 
 type FormState = {
   name: string;
@@ -63,6 +67,15 @@ const Subscriptions: React.FC = () => {
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
+  
+  const [activeSubscriptions, setActiveSubscriptions] = useState<ActiveSubscriptionItem[]>([]);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+  const [subscriptionSummary, setSubscriptionSummary] = useState({
+    total_subscriptions: 0,
+    active_subscriptions_count: 0,
+    pending_payments_count: 0,
+    total_revenue: 0,
+  });
 
   const [defaultPlans] = useState<PlanItem[]>([
     {
@@ -94,45 +107,6 @@ const Subscriptions: React.FC = () => {
     },
   ]);
 
-  const [activeSubscriptions] = useState<ActiveSubscriptionItem[]>([
-    {
-      id: 1,
-      institution: "ABC University",
-      planType: "Triple Course",
-      startDate: "2024-01-15",
-      endDate: "2025-01-14",
-      status: "Active",
-      amount: 149,
-    },
-    {
-      id: 2,
-      institution: "XYZ College",
-      planType: "Dual Course",
-      startDate: "2024-03-01",
-      endDate: "2027-02-28",
-      status: "Active",
-      amount: 79,
-    },
-    {
-      id: 3,
-      institution: "Tech Institute",
-      planType: "Single Course",
-      startDate: "2023-12-01",
-      endDate: "2024-11-30",
-      status: "Pending",
-      amount: 29,
-    },
-    {
-      id: 4,
-      institution: "Learning Academy",
-      planType: "Dual Course",
-      startDate: "2024-02-15",
-      endDate: "2025-02-14",
-      status: "Pending",
-      amount: 79,
-    },
-  ]);
-
   const [form, setForm] = useState<FormState>({
     name: "",
     planType: "",
@@ -157,15 +131,11 @@ const Subscriptions: React.FC = () => {
   ];
 
   const totalPlans = plans.length;
-  const activeCount = activeSubscriptions.filter(
-    (item) => item.status === "Active",
-  ).length;
-  const pendingPayments = activeSubscriptions.filter(
-    (item) => item.status === "Pending",
-  ).length;
-  const monthlyRevenue = activeSubscriptions
-    .filter((item) => item.status === "Active")
-    .reduce((sum, item) => sum + item.amount, 0);
+  const activePlans = plans.filter((p) => p.is_active).length;
+  const inactivePlans = plans.filter((p) => !p.is_active).length;
+  const avgPlanAmount = plans.length > 0 
+    ? (plans.reduce((sum, p) => sum + p.amount, 0) / plans.length).toFixed(2) 
+    : "0.00";
 
   const resetForm = () => {
     setForm({
@@ -204,7 +174,7 @@ const Subscriptions: React.FC = () => {
     try {
       const adminToken = localStorage.getItem('adminToken');
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
 
       if (adminToken) {
@@ -222,13 +192,11 @@ const Subscriptions: React.FC = () => {
         console.log('Plan deleted successfully');
       } else {
         console.error('Failed to delete plan:', response.statusText);
-        // Still remove from local state for better UX, but log the error
-        setPlans((prev) => prev.filter((item) => item.id !== id));
+        alert('Failed to delete plan from server.');
       }
     } catch (error) {
       console.error('Error deleting plan:', error);
-      // Still remove from local state for better UX, but log the error
-      setPlans((prev) => prev.filter((item) => item.id !== id));
+      alert('Error connecting to server to delete plan.');
     }
   };
 
@@ -405,8 +373,9 @@ const Subscriptions: React.FC = () => {
       if (response.ok) {
         const plansData = await response.json();
         // Transform API data to match PlanItem structure
-        const transformedPlans: PlanItem[] = Array.isArray(plansData)
-          ? plansData.map((plan: any, index: number) => ({
+        const itemsArray = Array.isArray(plansData) ? plansData : (plansData.items || []);
+        
+        const transformedPlans: PlanItem[] = itemsArray.map((plan: any, index: number) => ({
             id: plan.id || Date.now() + index,
             name: plan.plan_name || plan.name || `Plan ${index + 1}`,
             planType: plan.plan_type || plan.planType || 'Standard',
@@ -417,8 +386,7 @@ const Subscriptions: React.FC = () => {
             gst_percent: plan.gst_percent || 18,
             description: plan.description || '',
             is_active: plan.is_active !== undefined ? plan.is_active : true,
-          }))
-          : [];
+        }));
 
         setPlans(transformedPlans);
       } else {
@@ -435,8 +403,69 @@ const Subscriptions: React.FC = () => {
     }
   };
 
+  const fetchSubscriptionsFromAPI = async () => {
+    setLoadingSubscriptions(true);
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (adminToken) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/student/admin/subscriptions?limit=50&offset=0`, {
+        method: 'GET',
+        headers,
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('API returned non-JSON response. Status:', response.status);
+        return;
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.summary) {
+          setSubscriptionSummary({
+            total_subscriptions: data.summary.total_subscriptions || 0,
+            active_subscriptions_count: data.summary.active_subscriptions_count || 0,
+            pending_payments_count: data.summary.pending_payments_count || 0,
+            total_revenue: data.summary.total_revenue || 0,
+          });
+        }
+        
+        const itemsArray = Array.isArray(data) ? data : (data.items || []);
+        
+        const transformedSubscriptions: ActiveSubscriptionItem[] = itemsArray.map((sub: any, index: number) => ({
+            id: sub.subscription_id || Date.now() + index,
+            institution: sub.student_name || 'Unknown',
+            planType: sub.plan_name || 'Unknown',
+            startDate: sub.start_at ? sub.start_at.split('T')[0] : '',
+            endDate: sub.end_at ? sub.end_at.split('T')[0] : '',
+            status: sub.subscription_status === 'active' ? 'Active' : sub.subscription_status === 'expired' ? 'Expired' : (sub.subscription_status || 'Pending'),
+            amount: sub.payment_amount || 0,
+            mcqRemaining: sub.mcq_remaining || 0,
+            codingRemaining: sub.coding_remaining || 0,
+        }));
+
+        setActiveSubscriptions(transformedSubscriptions);
+      } else {
+        console.error('Failed to fetch subscriptions. Status:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+    } finally {
+      setLoadingSubscriptions(false);
+    }
+  };
+
   useEffect(() => {
     fetchPlansFromAPI();
+    fetchSubscriptionsFromAPI();
   }, []);
 
   return (
@@ -450,58 +479,117 @@ const Subscriptions: React.FC = () => {
           />
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-                  <Users size={18} />
+            {activeTab === "plans" ? (
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                      <BookOpen size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Total Plans</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        {String(totalPlans)}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500">Total Plans</p>
-                  <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
-                    {String(totalPlans)}
-                  </h3>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-600">
+                      <CheckSquare size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Active Plans</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        {String(activePlans)}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-600">
-                  <Clock size={18} />
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                      <Clock size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Inactive Plans</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        {String(inactivePlans)}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500">Active Subscriptions</p>
-                  <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
-                    {String(activeCount)}
-                  </h3>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                      <DollarSign size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Avg Plan Amount</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        ₹{avgPlanAmount}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                  <Clock size={18} />
+              </>
+            ) : (
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                      <Users size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Total Subscriptions</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        {String(subscriptionSummary.total_subscriptions)}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500">Pending Payments</p>
-                  <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
-                    {String(pendingPayments)}
-                  </h3>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-green-100 text-green-600">
+                      <Clock size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Active Subscriptions</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        {String(subscriptionSummary.active_subscriptions_count)}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                  <DollarSign size={18} />
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                      <Clock size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Pending Payments</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        {String(subscriptionSummary.pending_payments_count)}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-slate-500">Monthly Revenue</p>
-                  <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
-                    ${monthlyRevenue.toLocaleString()}
-                  </h3>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                      <DollarSign size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Monthly Revenue</p>
+                      <h3 className="mt-1 text-[15px] font-semibold text-slate-900 sm:text-[17px]">
+                        ₹{subscriptionSummary.total_revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </h3>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
 
             <div className="col-span-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center gap-1 border-b border-slate-200 px-4">
@@ -525,6 +613,9 @@ const Subscriptions: React.FC = () => {
                     plans={plans}
                     onEdit={goToEdit}
                     onDelete={handleDelete}
+                    onUpdate={(updatedPlan) => {
+                      setPlans((prev) => prev.map(p => p.id === updatedPlan.id ? updatedPlan : p));
+                    }}
                   />
                 </div>
               ) : (

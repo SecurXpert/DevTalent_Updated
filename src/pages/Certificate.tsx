@@ -10,6 +10,7 @@ import {
   Award,
   TrendingUp,
   Trophy,
+  ArrowLeft,
 } from "lucide-react";
 
 interface Level {
@@ -191,24 +192,24 @@ const Certificate: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 ">
-      <div className="bg-gradient-to-r from-[#6B2FA3] to-[#4B2E9E] text-white p-6">
-        <div className="max-w-7xl mx-auto">
-          <a
-            href="/studentdashboard"
-            className="flex items-center text-purple-200 hover:opacity-80 mb-4"
-          >
-            <ChevronRight className="w-5 h-5 mr-1 rotate-180" />
-            Back to Dashboard
-          </a>
-          <h1 className="text-3xl font-bold mb-2">Certifications & Levels</h1>
-          <p className="text-purple-200">
-            Track your certification journey and achievements
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-100">
+      {/* HEADER */}
+      <div className="bg-gradient-to-r from-purple-700 to-indigo-700 text-white px-6 py-8 md:px-10 md:py-10">
+        <button
+          onClick={() => navigate("/studentdashboard")}
+          className="flex items-center gap-2 text-sm mb-6 hover:opacity-80"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </button>
+
+        <h1 className="text-2xl md:text-3xl font-bold">Certifications & Levels</h1>
+        <p className="text-sm opacity-90 mt-1">
+          Track your certification journey and achievements
+        </p>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-10 bg-white rounded-2xl shadow-md p-6">
+      <div className="max-w-7xl mx-auto mt-10 bg-white rounded-2xl shadow-md p-6 mx-5">
         <h2 className="text-sm font-semibold text-gray-700 mb-6 flex items-center gap-2">
           📈 Certification Progress Timeline
         </h2>
@@ -228,19 +229,19 @@ const Certificate: React.FC = () => {
                 style={
                   level.id === "L1"
                     ? {
-                        background:
-                          "linear-gradient(135deg, #10B981 0%, #00A63E 100%)",
-                      }
+                      background:
+                        "linear-gradient(135deg, #10B981 0%, #00A63E 100%)",
+                    }
                     : level.id === "L2"
                       ? {
-                          background:
-                            "linear-gradient(135deg, #3B82F6 0%, #155DFC 100%)",
-                        }
+                        background:
+                          "linear-gradient(135deg, #3B82F6 0%, #155DFC 100%)",
+                      }
                       : level.id === "L3"
                         ? {
-                            background:
-                              "linear-gradient(135deg, #F59E0B 0%, #F54900 100%)",
-                          }
+                          background:
+                            "linear-gradient(135deg, #F59E0B 0%, #F54900 100%)",
+                        }
                         : {}
                 }
               >
@@ -296,9 +297,8 @@ const Certificate: React.FC = () => {
             return (
               <div
                 key={level.id}
-                className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg ${
-                  selectedLevel === level.id ? "ring-2 ring-blue-500" : ""
-                }`}
+                className={`bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg ${selectedLevel === level.id ? "ring-2 ring-blue-500" : ""
+                  }`}
                 onClick={() => setSelectedLevel(level.id)}
               >
                 {/* Card Header */}

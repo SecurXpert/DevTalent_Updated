@@ -69,6 +69,7 @@ export default function OnlineCompiler() {
   const [testResults, setTestResults] = useState<any[] | null>(null);
 
   const [isAlreadySubmitted, setIsAlreadySubmitted] = useState(false);
+  const [languagesList, setLanguagesList] = useState<{lang_id: number, lang_name: string, description: string}[]>([]);
   const buildPayload = (extra: Record<string, any> = {}) => {
     const currentCode = answers[activeIdx] || "";
 
@@ -84,6 +85,26 @@ export default function OnlineCompiler() {
 
     return payload;
   };
+
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      try {
+        const response = await fetch("https://apicompiler.devtalent.securxperts.com:8000/languages/", {
+          method: "GET",
+          headers: {
+            "accept": "application/json",
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setLanguagesList(data);
+        }
+      } catch (error) {
+        console.error("Error fetching languages:", error);
+      }
+    };
+    fetchLanguages();
+  }, []);
 
   // Add this useEffect inside your OnlineCompiler component (anywhere after the other useEffects)
 
@@ -394,9 +415,9 @@ export default function OnlineCompiler() {
       const examDataFromState = location.state?.examData;
       let data: any = null;
 
-      if (examDataFromState && examDataFromState.questions && 
-         (Array.isArray(examDataFromState.questions) ? examDataFromState.questions.length > 0 : Object.keys(examDataFromState.questions).length > 0)) {
-         data = examDataFromState;
+      if (examDataFromState && examDataFromState.questions &&
+        (Array.isArray(examDataFromState.questions) ? examDataFromState.questions.length > 0 : Object.keys(examDataFromState.questions).length > 0)) {
+        data = examDataFromState;
       } else {
         throw new Error("No questions found in exam data. Please restart the exam.");
       }
@@ -415,7 +436,7 @@ export default function OnlineCompiler() {
       } else if (typeof rawQuestions === 'object') {
         questionsArray = Object.values(rawQuestions);
       }
-      
+
       const formatted = questionsArray.map((q: any, index: number) => {
         const details = q.details || q;
         return {
@@ -859,8 +880,8 @@ export default function OnlineCompiler() {
               key={i}
               onClick={() => setActiveIdx(i)}
               className={`min-w-[36px] h-9 md:w-10 md:h-10 rounded-xl font-bold text-sm ${i === activeIdx
-                  ? "bg-purple-600 text-white"
-                  : "bg-white border text-gray-600"
+                ? "bg-purple-600 text-white"
+                : "bg-white border text-gray-600"
                 }`}
             >
               {i + 1}
@@ -923,9 +944,19 @@ export default function OnlineCompiler() {
               onChange={(e) => setLanguage(e.target.value)}
               className="px-3 py-2 border rounded"
             >
-              <option value="python">Python 3.10</option>
-              <option value="java">Java</option>
-              <option value="php">PHP</option>
+              {languagesList.length > 0 ? (
+                languagesList.map((lang) => (
+                  <option key={lang.lang_id} value={lang.lang_name.toLowerCase()}>
+                    {lang.lang_name} {lang.description ? `(${lang.description})` : ""}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="python">Python 3.10</option>
+                  <option value="java">Java</option>
+                  <option value="php">PHP</option>
+                </>
+              )}
             </select>
 
             {language === "java" && (
@@ -972,8 +1003,8 @@ export default function OnlineCompiler() {
                       </p>
                       <span
                         className={`px-2 py-1 rounded text-[10px] font-bold ${test.result?.every((r: any) => r.success)
-                            ? "bg-green-600 text-white"
-                            : "bg-red-600 text-white"
+                          ? "bg-green-600 text-white"
+                          : "bg-red-600 text-white"
                           }`}
                       >
                         {test.result?.every((r: any) => r.success)

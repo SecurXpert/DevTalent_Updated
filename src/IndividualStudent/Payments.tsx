@@ -74,6 +74,7 @@ const Payments = () => {
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
+  const [totalSpentFromAPI, setTotalSpentFromAPI] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,7 +93,17 @@ const Payments = () => {
           throw new Error("Failed to fetch plans");
         }
         const data = await response.json();
-        setPlans(Array.isArray(data) ? data : (data ? [data] : []));
+        let parsedPlans: Plan[] = [];
+        if (Array.isArray(data)) {
+          parsedPlans = data;
+        } else if (data && Array.isArray(data.items)) {
+          parsedPlans = data.items;
+        } else if (data && Array.isArray(data.data)) {
+          parsedPlans = data.data;
+        } else if (data) {
+          parsedPlans = [data];
+        }
+        setPlans(parsedPlans);
       } catch (err: any) {
         setError(err.message || "An error occurred");
       } finally {
@@ -112,7 +123,20 @@ const Payments = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          setPaymentHistory(Array.isArray(data) ? data : (data ? [data] : []));
+          if (data && data.total_payment_amount !== undefined) {
+            setTotalSpentFromAPI(data.total_payment_amount);
+          }
+          let parsedPayments: any[] = [];
+          if (Array.isArray(data)) {
+            parsedPayments = data;
+          } else if (data && Array.isArray(data.items)) {
+            parsedPayments = data.items;
+          } else if (data && Array.isArray(data.data)) {
+            parsedPayments = data.data;
+          } else if (data) {
+            parsedPayments = [data];
+          }
+          setPaymentHistory(parsedPayments);
         }
       } catch (err) {
         console.error("Failed to fetch payment history", err);
@@ -124,18 +148,7 @@ const Payments = () => {
   }, []);
 
   const totalSubscriptions = plans.length;
-  const totalSpent = plans.reduce((sum, plan, index) => {
-    const matchingPayment = paymentHistory.find((p) => {
-      const pSubId = p.subscription_id || p.subscriptionId || p.sub_id;
-      const pPlanId = p.plan_id || p.planId;
-      return (
-        (pSubId && Number(pSubId) === Number(plan.subscription_id)) ||
-        (pPlanId && Number(pPlanId) === Number(plan.plan_id))
-      );
-    }) || paymentHistory[index] || paymentHistory[0];
-    const displayAmount = plan.amount || matchingPayment?.amount || 0;
-    return sum + (Number(displayAmount) || 0);
-  }, 0);
+  const totalSpent = totalSpentFromAPI;
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -255,7 +268,7 @@ const Payments = () => {
                       </p>
 
                       <span className={`text-xs px-3 py-1 rounded-full inline-block mt-1 ${plan.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                        {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                        {plan.status ? plan.status.charAt(0).toUpperCase() + plan.status.slice(1) : 'Unknown'}
                       </span>
                     </div>
 

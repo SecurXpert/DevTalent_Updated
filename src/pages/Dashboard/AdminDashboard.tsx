@@ -318,6 +318,43 @@ export default function AdminDashboard() {
           throw new Error("Invalid dashboard response");
         }
 
+        // Fetch completed exams count
+        try {
+          const adminToken = localStorage.getItem('adminToken');
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+          if (adminToken) {
+            headers['Authorization'] = `Bearer ${adminToken}`;
+          }
+
+          const countRes = await fetch('http://192.168.0.103:8000/ind/coding/admin/today/completed-count', {
+            headers,
+          });
+
+          if (countRes.ok) {
+            const countData = await countRes.json();
+
+            // Log to see the structure if needed
+            // console.log("Completed exams API response:", countData);
+
+            // Extract the actual count value from the response
+            let finalCount = "0";
+            if (typeof countData === "number" || typeof countData === "string") {
+              finalCount = String(countData);
+            } else if (countData && typeof countData === "object") {
+              finalCount = String(countData.count ?? countData.completed_count ?? countData.total ?? "0");
+            }
+
+            const completedCardIndex = response.stats.findIndex(s => s.title === "Exams Completed Today");
+            if (completedCardIndex !== -1) {
+              response.stats[completedCardIndex].value = finalCount;
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching completed exams count:", e);
+        }
+
         setData(response);
       } catch (err: any) {
         setError(err.message || "Failed to load dashboard");

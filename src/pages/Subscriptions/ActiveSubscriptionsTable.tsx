@@ -7,8 +7,10 @@ type ActiveSubscriptionItem = {
   planType: string;
   startDate: string;
   endDate: string;
-  status: "Active" | "Pending";
+  status: string;
   amount: number;
+  mcqRemaining: number;
+  codingRemaining: number;
 };
 
 type ActiveSubscriptionsTableProps = {
@@ -24,10 +26,12 @@ const ActiveSubscriptionsTable: React.FC<ActiveSubscriptionsTableProps> = ({
         {/* Header */}
         <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
           <tr>
-            <th className="px-6 py-4 text-left">Institution</th>
+            <th className="px-6 py-4 text-left">Std. name</th>
             <th className="px-6 py-4 text-left">Plan Type</th>
             <th className="px-6 py-4 text-left">Start Date</th>
             <th className="px-6 py-4 text-left">End Date</th>
+            <th className="px-6 py-4 text-left">MCQ Remaining</th>
+            <th className="px-6 py-4 text-left">Coding Remaining</th>
             <th className="px-6 py-4 text-left">Payment Status</th>
             <th className="px-6 py-4 text-left">Actions</th>
           </tr>
@@ -65,11 +69,10 @@ const ActiveSubscriptionsTable: React.FC<ActiveSubscriptionsTableProps> = ({
                   <span>{item.endDate}</span>
                   <div className="mt-1">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        new Date(item.endDate) < new Date()
+                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${new Date(item.endDate) < new Date()
                           ? "bg-red-100 text-red-700"
                           : "bg-green-100 text-green-700"
-                      }`}
+                        }`}
                     >
                       {new Date(item.endDate) < new Date()
                         ? "Expired"
@@ -79,16 +82,25 @@ const ActiveSubscriptionsTable: React.FC<ActiveSubscriptionsTableProps> = ({
                 </div>
               </td>
 
+              {/* MCQ Remaining */}
+              <td className="px-6 py-5">
+                <span className="font-semibold text-gray-900">{item.mcqRemaining}</span>
+              </td>
+
+              {/* Coding Remaining */}
+              <td className="px-6 py-5">
+                <span className="font-semibold text-gray-900">{item.codingRemaining}</span>
+              </td>
+
               {/* Status */}
               <td className="px-6 py-5">
                 <span
-                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                    item.status === "Active"
+                  className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${item.status === "Active"
                       ? "bg-green-100 text-green-700"
                       : item.status === "Pending"
                         ? "bg-yellow-100 text-yellow-700"
                         : "bg-red-100 text-red-700"
-                  }`}
+                    }`}
                 >
                   {item.status}
                 </span>

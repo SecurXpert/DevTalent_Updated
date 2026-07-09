@@ -16,6 +16,7 @@ import DevTalentComponent from "./pages/Dev";
 import FullPage from "./pages/gallery";
 import CoddingExam from "./pages/CoddingExam ";
 import OnlineCompiler from "./pages/OnlineCompiler";
+import IndividualCompiler from "./pages/IndividualCompiler";
 import Privacy from "./pages/Privacy";
 import Conditions from "./pages/Conditions";
 // import MCQQuestionPaperCard from "./components/MCQQuestionPaperCard";
@@ -44,6 +45,7 @@ import UpgradePage from "./pages/UpgradePage";
 import Adminlogin from "./pages/Adminlogin";
 import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import SidebarLayout from "./components/SidebarLayout";
+import StudentSidebarLayout from "./components/StudentSidebarLayout";
 import Subscriptions from "./pages/Subscriptions";
 import Result from "./pages/Results/index";
 import ResultDetails from "./pages/Results/ResultDetails";
@@ -90,6 +92,7 @@ const App = () => (
           <Route path="/gallery" element={<FullPage />} />
           <Route path="/coddingExam" element={<CoddingExam />} />
           <Route path="/online-compiler" element={<OnlineCompiler />} />
+          <Route path="/individual-compiler" element={<IndividualCompiler />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/condition" element={<Conditions />} />
           {/* <Route path="/mcq" element={<MCQQuestionPaperCard />} /> */}
@@ -97,27 +100,27 @@ const App = () => (
           <Route path="/mcqpaper/:attemptId" element={<MCQPaper />} />
           <Route path="/login" element={<Login />} />
           <Route path="/impactsection" element={<ImpactSection />} />
-          <Route path="/studentdashboard" element={<StudentDashboard />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/studentdashboard" element={<StudentSidebarLayout><StudentDashboard /></StudentSidebarLayout>} />
+          <Route path="/profile" element={<StudentSidebarLayout><Profile /></StudentSidebarLayout>} />
           <Route path="/individual" element={<Individual />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/success1" element={<Success1 />} />
           <Route path="/registration" element={<Registration />} />
-          <Route path="/performance" element={<Performance />} />
-          <Route path="/payments" element={<Payments />} />
-          <Route path="/certificate" element={<Certificate />} />
+          <Route path="/performance" element={<StudentSidebarLayout><Performance /></StudentSidebarLayout>} />
+          <Route path="/payments" element={<StudentSidebarLayout><Payments /></StudentSidebarLayout>} />
+          <Route path="/certificate" element={<StudentSidebarLayout><Certificate /></StudentSidebarLayout>} />
           <Route path="/individualoverview" element={<IndividualOverview />} />
           <Route path="/individualoverview/:courseId" element={<IndividualOverview />} />
           <Route path="/individualterms" element={<IndividualTerms />} />
           <Route path="/individualterms/:courseId" element={<IndividualTerms />} />
-          <Route path="/student-results" element={<StudentResults />} />
-          <Route path="/scorecard" element={<ViewScorecard />} />
+          <Route path="/student-results" element={<StudentSidebarLayout><StudentResults /></StudentSidebarLayout>} />
+          <Route path="/scorecard" element={<StudentSidebarLayout><ViewScorecard /></StudentSidebarLayout>} />
           <Route path="/upgrade" element={<UpgradePage />} />
           <Route path="/adminlogin" element={<Adminlogin />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/subscription" element={<Subscription />} /> 
-          <Route path="/summary" element={<Summary />} />
+          <Route path="/subscription" element={<StudentSidebarLayout><Subscription /></StudentSidebarLayout>} /> 
+          <Route path="/summary" element={<StudentSidebarLayout><Summary /></StudentSidebarLayout>} />
           <Route path="/technical" element={<Technical />} />
           <Route path="/non-technical" element={<NonTechnical />} />
 
@@ -277,7 +280,7 @@ const App = () => (
               </SidebarLayout>
             }
           />
-                    <Route path="/subscription" element={<Subscription />} /> 
+          <Route path="/subscription" element={<StudentSidebarLayout><Subscription /></StudentSidebarLayout>} /> 
 
           <Route
             path="/reports"

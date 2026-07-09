@@ -12,7 +12,7 @@ const firebaseConfig = {
   projectId: "devtalent-69ce1",
   storageBucket: "devtalent-69ce1.firebasestorage.app",
   messagingSenderId: "780535166148",
-  appId: "1:780535166144:web:1042d1d2d36316bfd28591",
+  appId: "1:780535166109:web:1042d1d2d36316bfd28591",
   measurementId: "G-REQWEBY114",
 };
 

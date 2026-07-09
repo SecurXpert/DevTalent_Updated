@@ -8,7 +8,6 @@ interface CodingExamScheduleProps {
   isActive: boolean;
   onDateChange: (field: "startDate" | "endDate", value: string) => void;
   onActiveChange: (value: boolean) => void;
-  onSave: () => void;
   formErrors: FormErrors;
 }
 
@@ -18,7 +17,6 @@ const CodingExamSchedule: React.FC<CodingExamScheduleProps> = ({
   isActive,
   onDateChange,
   onActiveChange,
-  onSave,
   formErrors,
 }) => {
   return (
@@ -67,19 +65,6 @@ const CodingExamSchedule: React.FC<CodingExamScheduleProps> = ({
         />
       </div> */}
 
-      {/* Save Button */}
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={onSave}
-          className="flex h-[44px] items-center justify-center rounded-[10px] px-6 text-[14px] font-medium text-white"
-          style={{
-            background: "linear-gradient(90deg, #4F39F6 0%, #9810FA 100%)",
-          }}
-        >
-          Save
-        </button>
-      </div>
     </div>
   );
 };

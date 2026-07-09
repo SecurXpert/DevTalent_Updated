@@ -34,6 +34,7 @@ export interface McqQuestion {
   type: "MCQ";
   questionText: string;
   options: string[];
+  optionIds?: (number | null)[];
   correctAnswer: number | null;
   marks: number;
 }

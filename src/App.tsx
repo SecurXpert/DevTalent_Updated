@@ -65,10 +65,34 @@ import EditMcq from "./pages/Exams/Mcq/EditMcq";
 import EditCoding from "./pages/Exams/Codding/EditCoding";
 // import ExamsTab from "./pages/ExamsTab";
 import ExamsTab from "./pages/Exams/ExamsPage";
+import AdminManagement from "./pages/AdminManagement/AdminManagement";
+import CreateAdmin from "./pages/AdminManagement/CreateAdmin";
+import CodingLanguages from "./pages/CodingLanguages";
+import CreateLanguage from "./pages/CodingLanguages/CreateLanguage";
+import EditLanguage from "./pages/CodingLanguages/EditLanguage";
+import ViewLanguage from "./pages/CodingLanguages/ViewLanguage";
+import EditAdmin from "./pages/AdminManagement/EditAdmin";
 
 
 
 const queryClient = new QueryClient();
+
+// Route guard to restrict access by admin login and role
+const AdminRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
+  const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
+  const userRole = localStorage.getItem("userRole"); // "super_admin" or "admin"
+
+  if (!isAuthenticated) {
+    return <Navigate to="/adminlogin" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(userRole || "")) {
+    // If they aren't authorized for this specific dashboard/management page, redirect them accordingly
+    return <Navigate to={userRole === "super_admin" ? "/superadmindashboard" : "/admindashboard"} replace />;
+  }
+
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -93,7 +117,6 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/condition" element={<Conditions />} />
           {/* <Route path="/mcq" element={<MCQQuestionPaperCard />} /> */}
-          <Route path="/examtab" element={<ExamsTab />} />
           <Route path="/mcqpaper/:attemptId" element={<MCQPaper />} />
           <Route path="/login" element={<Login />} />
           <Route path="/impactsection" element={<ImpactSection />} />
@@ -124,98 +147,132 @@ const App = () => (
           <Route
             path="/student/:id"
             element={
-              <SidebarLayout>
-                <StudentProfile />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <StudentProfile />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/students/studentresult/:id"
             element={
-              <SidebarLayout>
-                <StudentResult />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <StudentResult />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/result/:id"
             element={
-              <SidebarLayout>
-                <ResultDetails />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <ResultDetails />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/admindashboard"
             element={
-              <SidebarLayout>
-                <AdminDashboard />
-              </SidebarLayout>
+              <AdminRoute allowedRoles={["admin"]}>
+                <SidebarLayout>
+                  <AdminDashboard />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/superadmindashboard"
+            element={
+              <AdminRoute allowedRoles={["super_admin"]}>
+                <SidebarLayout>
+                  <AdminDashboard />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/profile-settings"
             element={
-              <SidebarLayout>
-                <ProfileSettings />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <ProfileSettings />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/students"
             element={
-              <SidebarLayout>
-                <Student />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <Student />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/students/view/:id"
             element={
-              <SidebarLayout>
-                <ViewStudent />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <ViewStudent />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/students/edit/:id"
             element={
-              <SidebarLayout>
-                <EditStudent />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <EditStudent />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/courses"
             element={
-              <SidebarLayout>
-                <CoursesPage />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <CoursesPage />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/create-course"
             element={
-              <SidebarLayout>
-                <CreateCourse />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <CreateCourse />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
 
           <Route
             path="/edit-course"
             element={
-              <SidebarLayout>
-                <EditCourse />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <EditCourse />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/exams"
             element={
-              <SidebarLayout>
-                <ExamsTab  />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <ExamsTab  />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
 
@@ -223,84 +280,194 @@ const App = () => (
           <Route
               path="/coding"
               element={
-                <SidebarLayout>
-                  <CoddingPage />
-                </SidebarLayout>
+                <AdminRoute>
+                  <SidebarLayout>
+                    <CoddingPage />
+                  </SidebarLayout>
+                </AdminRoute>
               }
             />
             <Route
               path="/exams/coding/edit/:id"
               element={
-                <SidebarLayout>
-                  <EditCoding />
-                </SidebarLayout>
+                <AdminRoute>
+                  <SidebarLayout>
+                    <EditCoding />
+                  </SidebarLayout>
+                </AdminRoute>
               }
             />
             <Route
               path="/exams/mcq/edit/:id"
               element={
-                <SidebarLayout>
-                  <EditMcq />
-                </SidebarLayout>
+                <AdminRoute>
+                  <SidebarLayout>
+                    <EditMcq />
+                  </SidebarLayout>
+                </AdminRoute>
               }
             />
             <Route
               path="/exams/details/:id"
               element={
-                <SidebarLayout>
-                  <ExamDetails />
-                </SidebarLayout>
+                <AdminRoute>
+                  <SidebarLayout>
+                    <ExamDetails />
+                  </SidebarLayout>
+                </AdminRoute>
               }
             />
             <Route
               path="/mcq"
               element={
-                <SidebarLayout>
-                  <McqPage />
-                </SidebarLayout>
+                <AdminRoute>
+                  <SidebarLayout>
+                    <McqPage />
+                  </SidebarLayout>
+                </AdminRoute>
               }
             />
  
           <Route
             path="/results"
             element={
-              <SidebarLayout>
-                <Result />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <Result />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
             <Route
             path="/subscriptions"
             element={
-              <SidebarLayout>
-                <Subscriptions />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <Subscriptions />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
-                    <Route path="/subscription" element={<Subscription />} /> 
+          <Route
+            path="/admin-management"
+            element={
+              <AdminRoute allowedRoles={["super_admin"]}>
+                <SidebarLayout>
+                  <AdminManagement />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/create-admin"
+            element={
+              <AdminRoute allowedRoles={["super_admin"]}>
+                <SidebarLayout>
+                  <CreateAdmin />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/coding-languages"
+            element={
+              <AdminRoute>
+                <SidebarLayout>
+                  <CodingLanguages />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/create-language"
+            element={
+              <AdminRoute>
+                <SidebarLayout>
+                  <CreateLanguage />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/edit-language/:id"
+            element={
+              <AdminRoute>
+                <SidebarLayout>
+                  <EditLanguage />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/view-language/:id"
+            element={
+              <AdminRoute>
+                <SidebarLayout>
+                  <ViewLanguage />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin-management/create"
+            element={
+              <AdminRoute allowedRoles={["super_admin"]}>
+                <SidebarLayout>
+                  <CreateAdmin />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin-management/edit/:id"
+            element={
+              <AdminRoute allowedRoles={["super_admin"]}>
+                <SidebarLayout>
+                  <EditAdmin />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin-management/view/:id"
+            element={
+              <AdminRoute allowedRoles={["super_admin"]}>
+                <SidebarLayout>
+                  <EditAdmin />
+                </SidebarLayout>
+              </AdminRoute>
+            }
+          />
+          <Route path="/subscription" element={<Subscription />} /> 
 
           <Route
             path="/reports"
             element={
-              <SidebarLayout>
-               <Report />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                 <Report />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/notifications"
             element={
-              <SidebarLayout>
-                <Notifications />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <Notifications />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           <Route
             path="/settings"
             element={
-              <SidebarLayout>
-                <SystemSettings />
-              </SidebarLayout>
+              <AdminRoute>
+                <SidebarLayout>
+                  <SystemSettings />
+                </SidebarLayout>
+              </AdminRoute>
             }
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

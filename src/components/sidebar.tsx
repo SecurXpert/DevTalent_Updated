@@ -9,27 +9,36 @@ import {
   PieChart,
   Bell,
   Settings,
+  Code,
   Menu,
   BookOpen,
   X,
+  Shield,
 } from "lucide-react";
-
-const menuItems = [
-  { name: "Dashboard", icon: LayoutDashboard, path: "/admindashboard" },
-  { name: "Students", icon: Users, path: "/students" },
-  { name: "Exams", icon: FileText, path: "/exams" },
-  { name: "Courses", icon: BookOpen, path: "/courses" },
-  { name: "Results", icon: BarChart3, path: "/results" },
-  { name: "Subscriptions & Plans", icon: CreditCard, path: "/subscriptions" },
-  { name: "Reports & Analytics", icon: PieChart, path: "/reports" },
-  { name: "Notifications", icon: Bell, path: "/notifications" },
-  { name: "Settings", icon: Settings, path: "/settings" },
-];
 
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const userRole = localStorage.getItem("userRole"); // "super_admin" or "admin"
+  const dashboardPath = userRole === "super_admin" ? "/superadmindashboard" : "/admindashboard";
+
+  const menuItems = [
+    { name: "Dashboard", icon: LayoutDashboard, path: dashboardPath },
+    { name: "Students", icon: Users, path: "/students" },
+    { name: "Exams", icon: FileText, path: "/exams" },
+      { name: "Courses", icon: BookOpen, path: "/courses" },
+      { name: "Coding Languages", icon: Code, path: "/coding-languages" },
+    { name: "Results", icon: BarChart3, path: "/results" },
+    { name: "Subscriptions & Plans", icon: CreditCard, path: "/subscriptions" },
+    { name: "Reports & Analytics", icon: PieChart, path: "/reports" },
+    { name: "Notifications", icon: Bell, path: "/notifications" },
+    ...(userRole === "super_admin"
+      ? [{ name: "Admin Management", icon: Shield, path: "/admin-management" }]
+      : []),
+    { name: "Settings", icon: Settings, path: "/settings" },
+  ];
 
   // Listen for custom event from header
   useEffect(() => {
@@ -63,14 +72,15 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-[240px] sm:w-[260px] md:w-[200px] lg:w-[220px] xl:w-[240px] min-h-screen bg-[#f8f8f8] border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:relative lg:transform-none ${
+        className={`fixed inset-y-0 left-0 z-50 w-[240px] sm:w-[260px] md:w-[200px] lg:w-[220px] xl:w-[240px] h-screen bg-[#f8f8f8] border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:relative lg:h-full lg:transform-none ${
           isMobileMenuOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-[60px] sm:h-[65px] md:h-[50px] lg:h-[55px] xl:h-[66px] border-b border-gray-200 px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4">
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center justify-between h-[60px] sm:h-[65px] md:h-[50px] lg:h-[55px] xl:h-[66px] border-b border-gray-200 px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4">
           <div className="text-center leading-none flex-1">
             <img
               src="/img/Logo.svg"
@@ -88,7 +98,7 @@ export default function Sidebar() {
         </div>
 
         {/* Menu */}
-        <nav className="px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4 py-4 sm:py-5 md:py-3 lg:py-4 xl:py-5">
+        <nav className="flex-1 overflow-y-auto px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4 py-4 sm:py-5 md:py-3 lg:py-4 xl:py-5">
           <div className="flex flex-col gap-1 sm:gap-2 md:gap-1 lg:gap-1 xl:gap-2">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
@@ -119,6 +129,7 @@ export default function Sidebar() {
             })}
           </div>
         </nav>
+      </div>
       </aside>
     </>
   );

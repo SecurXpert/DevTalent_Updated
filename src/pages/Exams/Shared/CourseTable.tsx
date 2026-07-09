@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChevronDown,
   FileText,
@@ -11,6 +11,7 @@ import {
 import { FaRegEdit } from "react-icons/fa";
 import { CourseItem, ExamItem } from "../types";
 import { statusBadge } from "../utils";
+import { API_BASE_URL } from "@/pages/Services/api/api";
 
 interface CourseTableProps {
   filteredCourses: CourseItem[];
@@ -29,6 +30,69 @@ const CourseTable: React.FC<CourseTableProps> = ({
   editExam,
   deleteExam,
 }) => {
+  const [fetchedExams, setFetchedExams] = useState<Record<number, ExamItem[]>>({});
+  const [loadingExams, setLoadingExams] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    if (expandedCourseId !== null && !fetchedExams[expandedCourseId] && !loadingExams[expandedCourseId]) {
+      const fetchExamsForCourse = async () => {
+        setLoadingExams((prev) => ({ ...prev, [expandedCourseId]: true }));
+        try {
+          const adminToken = localStorage.getItem("adminToken");
+          const headers: Record<string, string> = {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+          };
+          if (adminToken) {
+            headers["Authorization"] = `Bearer ${adminToken}`;
+          }
+
+          const response = await fetch(
+            `${API_BASE_URL}/ind/mcq/admin/courses/${expandedCourseId}/mapped-exams`,
+            { headers }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const items = data.items || [];
+            const mappedExams: ExamItem[] = items.map((item: any) => {
+              const exam = item.exam || {};
+              return {
+                id: exam.id,
+                title: exam.title || "Untitled Exam",
+                type: item.exam_kind === "mcq" ? "MCQ Only" : (exam.type || "MCQ Only"),
+                questions: exam.question_count || 0,
+                duration: `${exam.duration_minutes || 60} min`,
+                enrolled: exam.enrolled_students || 0,
+                date: exam.created_at ? exam.created_at.split("T")[0] : "2026-01-01",
+                status: exam.is_active ? "Active" : "Draft",
+                description: exam.description || "",
+                totalMarks: exam.total_marks || 100,
+                passingScore: exam.pass_percentage || 60,
+              };
+            });
+            setFetchedExams((prev) => ({ ...prev, [expandedCourseId]: mappedExams }));
+          } else {
+            const courseObj = filteredCourses.find(c => c.id === expandedCourseId);
+            if (courseObj) {
+              setFetchedExams((prev) => ({ ...prev, [expandedCourseId]: courseObj.exams }));
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching exams for course ${expandedCourseId}:`, error);
+          const courseObj = filteredCourses.find(c => c.id === expandedCourseId);
+          if (courseObj) {
+            setFetchedExams((prev) => ({ ...prev, [expandedCourseId]: courseObj.exams }));
+          }
+        } finally {
+          setLoadingExams((prev) => ({ ...prev, [expandedCourseId]: false }));
+        }
+      };
+
+      fetchExamsForCourse();
+    }
+  }, [expandedCourseId, filteredCourses]);
+
   return (
     <div className="mt-6 overflow-hidden rounded-[14px] border border-[#e1e3ea] bg-white">
       {/* Desktop Table Header */}
@@ -242,69 +306,95 @@ const CourseTable: React.FC<CourseTableProps> = ({
               </button>
             </div>
 
-            {isExpanded && course.exams.length > 0 && (
-              <div className="space-y-3 bg-[#fafafe] px-4 pb-4">
-                {course.exams.map((exam) => (
-                  <div
-                    key={exam.id}
-                    className="flex flex-col justify-between gap-4 rounded-[12px] border border-[#e1e3ea] bg-white p-4 lg:flex-row lg:items-center"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-2 flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <FileText size={14} className="text-[#5865f2]" />
-                          <p className="font-semibold text-[#1f2937] text-sm md:text-base">
-                            {exam.title}
-                          </p>
+            {isExpanded && (
+              (() => {
+                const fetchedList = fetchedExams[course.id];
+                const examsToShow = (fetchedList && fetchedList.length > 0)
+                  ? fetchedList
+                  : course.exams;
+
+                if (loadingExams[course.id]) {
+                  return (
+                    <div className="flex justify-center items-center py-6 bg-[#fafafe] px-4 pb-4">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-[#4F39F6]"></div>
+                      <span className="ml-2 text-xs text-[#6b7280]">Loading exams...</span>
+                    </div>
+                  );
+                }
+
+                if (examsToShow.length === 0) {
+                  return (
+                    <div className="text-center py-4 bg-[#fafafe] text-xs text-[#6b7280] px-4 pb-4 border-t border-[#eceef3] italic">
+                      No exams mapped to this course.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-3 bg-[#fafafe] px-4 pb-4">
+                    {examsToShow.map((exam) => (
+                      <div
+                        key={exam.id}
+                        className="flex flex-col justify-between gap-4 rounded-[12px] border border-[#e1e3ea] bg-white p-4 lg:flex-row lg:items-center"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <FileText size={14} className="text-[#5865f2]" />
+                              <p className="font-semibold text-[#1f2937] text-sm md:text-base">
+                                {exam.title}
+                              </p>
+                            </div>
+                            <span
+                              className={`rounded-full px-3 py-1 text-[11px] font-medium ${statusBadge(
+                                exam.status,
+                              )}`}
+                            >
+                              {exam.status}
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[11px] md:text-[12px] text-[#6b7280]">
+                            <span className="text-xs md:text-sm">{exam.type}</span>
+                            <span className="text-xs md:text-sm">
+                              {exam.questions} questions
+                            </span>
+                            <span className="flex items-center gap-1 text-xs md:text-sm">
+                              <Clock3 size={12} />
+                              {exam.duration}
+                            </span>
+
+                          </div>
                         </div>
-                        <span
-                          className={`rounded-full px-3 py-1 text-[11px] font-medium ${statusBadge(
-                            exam.status,
-                          )}`}
-                        >
-                          {exam.status}
-                        </span>
+
+                        <div className="flex items-center gap-2 md:gap-4">
+                          <button
+                            onClick={() => viewExam(exam)}
+                            className="text-[#4F39F6] p-3 md:p-2 hover:bg-[#f0f8ff] rounded-lg transition-colors"
+                            aria-label="View exam"
+                          >
+                            <Eye size={16} className="md:size-4" />
+                          </button>
+                          <button
+                            onClick={() => editExam(exam)}
+                            className="text-[#155DFC] p-3 md:p-2 hover:bg-[#f0f8ff] rounded-lg transition-colors"
+                            aria-label="Edit exam"
+                          >
+                            <FaRegEdit size={16} className="md:size-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteExam(exam.id)}
+                            className="text-red-500 p-3 md:p-2 hover:bg-[#fff0f0] rounded-lg transition-colors"
+                            aria-label="Delete exam"
+                          >
+                            <Trash2 size={16} className="md:size-4" />
+                          </button>
+                        </div>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[11px] md:text-[12px] text-[#6b7280]">
-                        <span className="text-xs md:text-sm">{exam.type}</span>
-                        <span className="text-xs md:text-sm">
-                          {exam.questions} questions
-                        </span>
-                        <span className="flex items-center gap-1 text-xs md:text-sm">
-                          <Clock3 size={12} />
-                          {exam.duration}
-                        </span>
-
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 md:gap-4">
-                      <button
-                        onClick={() => viewExam(exam)}
-                        className="text-[#4F39F6] p-3 md:p-2 hover:bg-[#f0f8ff] rounded-lg transition-colors"
-                        aria-label="View exam"
-                      >
-                        <Eye size={16} className="md:size-4" />
-                      </button>
-                      <button
-                        onClick={() => editExam(exam)}
-                        className="text-[#155DFC] p-3 md:p-2 hover:bg-[#f0f8ff] rounded-lg transition-colors"
-                        aria-label="Edit exam"
-                      >
-                        <FaRegEdit size={16} className="md:size-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteExam(exam.id)}
-                        className="text-red-500 p-3 md:p-2 hover:bg-[#fff0f0] rounded-lg transition-colors"
-                        aria-label="Delete exam"
-                      >
-                        <Trash2 size={16} className="md:size-4" />
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()
             )}
           </div>
         );

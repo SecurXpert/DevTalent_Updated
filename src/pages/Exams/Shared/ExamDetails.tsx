@@ -94,28 +94,7 @@ const MCQSection: React.FC<{ questions?: any[] }> = ({ questions = [] }) => {
         )}
       </div>
 
-      {/* Supported Course Types */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-6">
-          Supported Course Types
-        </h2>
-
-        <div className="flex flex-wrap gap-10">
-          {["Python", "Java", "C++", "JavaScript"].map((course) => (
-            <label
-              key={course}
-              className="flex items-center gap-3 text-gray-700"
-            >
-              <input
-                type="checkbox"
-                className="w-5 h-5 accent-gray-400"
-                readOnly
-              />
-              <span className="text-[14px] font-medium">{course}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+    
     </div>
   );
 };
@@ -231,28 +210,7 @@ const CodingSection: React.FC<{ questions?: any[] }> = ({ questions = [] }) => {
         )}
       </div>
 
-      {/* Supported Course Types */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-6">
-          Supported Course Types
-        </h2>
-
-        <div className="flex flex-wrap gap-10">
-          {["Python", "Java", "C++", "JavaScript"].map((course) => (
-            <label
-              key={course}
-              className="flex items-center gap-3 text-gray-700"
-            >
-              <input
-                type="checkbox"
-                className="w-5 h-5 accent-gray-400"
-                readOnly
-              />
-              <span className="text-[14px] font-medium">{course}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+   
     </div>
   );
 };

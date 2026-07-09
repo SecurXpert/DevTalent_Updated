@@ -1,400 +1,338 @@
-// import React, { useState } from "react";
-// import {
-//   FaBookOpen,
-//   FaEnvelope,
-//   FaLock,
-//   FaEye,
-//   FaEyeSlash,
-//   FaShieldAlt,
-//   FaUserShield,
-// } from "react-icons/fa";
-// import { toast } from "sonner";
-// import { useNavigate } from "react-router-dom";
-
-// const Adminlogin: React.FC = () => {
-//   const [role, setRole] = useState<"superadmin" | "admin">("superadmin");
-//   const [showPassword, setShowPassword] = useState(false);
-
-//   const [adminLoginData, setAdminLoginData] = useState({
-//     email: "",
-//     password: "",
-//   });
-
-//   const [errors, setErrors] = useState({
-//     email: "",
-//     password: "",
-//   });
-
-//   const navigate = useNavigate();
-
-//   // ✅ Simple handler (NO API)
-//   const handleAdminLogin = (e: React.FormEvent) => {
-//     e.preventDefault();
-
-//     let newErrors = { email: "", password: "" };
-//     let isValid = true;
-
-//     // Email validation
-//     if (!adminLoginData.email) {
-//       newErrors.email = "Email is required";
-//       isValid = false;
-//     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminLoginData.email)) {
-//       newErrors.email = "Enter a valid email";
-//       isValid = false;
-//     }
-
-//     // Password validation
-//     if (!adminLoginData.password) {
-//       newErrors.password = "Password is required";
-//       isValid = false;
-//     } else if (adminLoginData.password.length < 6) {
-//       newErrors.password = "Password must be at least 6 characters";
-//       isValid = false;
-//     }
-
-//     setErrors(newErrors);
-
-//     if (!isValid) return;
-
-//     // ✅ Success
-//     toast.success(
-//       `${role === "superadmin" ? "Super Admin" : "Admin"} login successful!`,
-//     );
-
-//     // 🔥 Role-based redirect
-//     if (role === "superadmin") {
-//       navigate("/superadmin-dashboard"); // change route if needed
-//     } else {
-//       navigate("/admindashboard"); // change route if needed
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-screen flex bg-gradient-to-br from-[#f3f0ff] to-[#e6e9ff]">
-//       {/* LEFT SIDE (UNCHANGED) */}
-//       <div
-//         className="w-1/2 hidden lg:flex flex-col justify-center items-center relative px-10"
-//         style={{
-//           background:
-//             "linear-gradient(180deg, rgba(219, 177, 251, 0.1) 0%, rgba(168, 152, 250, 0.1) 100%)",
-//         }}
-//       >
-//         <div className="relative grid grid-cols-2 gap-4">
-//           <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-400/50 rounded-full"></div>
-//           <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-purple-300/50 rounded-full"></div>
-
-//           <div className="relative w-[200px] h-[200px] bg-gradient-to-br from-[#4F46E5] to-[#9333EA] flex items-end justify-center overflow-visible rounded-l-[120px]">
-//             <img
-//               src="/login1.png"
-//               className="h-[250px] w-[250px] object-cover"
-//             />
-//           </div>
-
-//           <div className="relative w-[200px] h-[200px] bg-gradient-to-br from-[#9333EA] to-[#7C3AED] rounded-[30px] flex items-end justify-center overflow-visible">
-//             <img
-//               src="/login2.png"
-//               className="h-[250px] w-[250px] object-cover"
-//             />
-//           </div>
-
-//           <div className="relative w-[200px] h-[200px] bg-gradient-to-br from-[#9333EA] to-[#6D28D9] rounded-[30px] flex items-end justify-center overflow-visible mt-8">
-//             <img
-//               src="/login3.png"
-//               className="h-[270px] w-[260px] object-cover"
-//             />
-//           </div>
-
-//           <div className="relative w-[200px] h-[200px] bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] flex items-end justify-center overflow-visible rounded-r-[120px] mt-8">
-//             <img
-//               src="/login4.png"
-//               className="h-[240px] w-[240px] object-cover"
-//             />
-//           </div>
-//         </div>
-
-//         <div className="mt-12 text-start">
-//           <h2 className="text-3xl font-bold bg-gradient-to-r from-[#9C1BFB] to-[#5D1095] bg-clip-text text-transparent">
-//             Built For Students
-//           </h2>
-//           <h3 className="text-5xl font-semibold bg-gradient-to-r from-[#9C1BFB] to-[#5D1095] bg-clip-text text-transparent mt-2">
-//             Trusted by Educators.
-//           </h3>
-//           <p className="text-gray-500 mt-4 max-w-md">
-//             Login confidently with a platform designed specifically for
-//             educational institutions
-//           </p>
-//         </div>
-//       </div>
-
-//       {/* RIGHT SIDE */}
-//       <div className="flex-1 flex items-center justify-center px-6">
-//         <div className="w-full max-w-md bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl p-8 border border-white/40">
-//           {/* Header */}
-//           <div className="text-center mb-8">
-//             <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg">
-//               <FaBookOpen />
-//             </div>
-
-//             <h2 className="text-3xl font-bold text-purple-600 mt-5">
-//               Welcome Back! 👋
-//             </h2>
-
-//             <p className="text-gray-500 text-sm mt-2">
-//               Please select your role and login to continue
-//             </p>
-//           </div>
-
-//           {/* Role Selection */}
-//           <div className="mb-6">
-//             <div className="flex items-center gap-2 mb-3 text-gray-600 text-sm">
-//               <FaShieldAlt className="text-purple-500" />
-//               <span>Choose Your Role</span>
-//             </div>
-
-//             <div className="flex gap-4">
-//               {["superadmin", "admin"].map((r) => (
-//                 <button
-//                   key={r}
-//                   onClick={() => setRole(r as any)}
-//                   className={`flex-1 p-5 rounded-2xl transition-all duration-300 border ${
-//                     role === r
-//                       ? "text-white scale-[1.03]"
-//                       : "bg-white text-gray-600 border-gray-200"
-//                   }`}
-//                   style={
-//                     role === r
-//                       ? {
-//                           background:
-//                             "linear-gradient(135deg, #8E51FF 0%, #9810FA 100%)",
-//                           borderTop: "2.65px solid #C27AFF",
-//                           boxShadow:
-//                             "0px 5.29px 7.94px -5.29px #AD46FF4D, 0px 13.23px 19.85px -3.97px #AD46FF4D",
-//                         }
-//                       : {}
-//                   }
-//                 >
-//                   <div className="flex flex-col items-center gap-2">
-//                     <div className="p-3 rounded-xl bg-white/20">
-//                       {r === "superadmin" ? <FaShieldAlt /> : <FaUserShield />}
-//                     </div>
-//                     <p className="font-semibold">
-//                       {r === "superadmin" ? "Super Admin" : "Admin"}
-//                     </p>
-//                     <p className="text-xs opacity-80">
-//                       {r === "superadmin"
-//                         ? "Full system control"
-//                         : "Manage platform"}
-//                     </p>
-//                   </div>
-//                 </button>
-//               ))}
-//             </div>
-//           </div>
-
-//           {/* FORM */}
-//           <form onSubmit={handleAdminLogin} className="space-y-4">
-//             <div className="flex flex-col">
-//               <div
-//                 className={`flex items-center gap-3 bg-gray-100 rounded-xl px-4 py-3 border ${
-//                   errors.email ? "border-red-500" : ""
-//                 }`}
-//               >
-//                 <FaEnvelope className="text-gray-400" />
-//                 <input
-//                   type="email"
-//                   placeholder="Email / Login ID"
-//                   value={adminLoginData.email}
-//                   onChange={(e) =>
-//                     setAdminLoginData({
-//                       ...adminLoginData,
-//                       email: e.target.value,
-//                     })
-//                   }
-//                   className="bg-transparent outline-none w-full text-sm"
-//                 />
-//               </div>
-
-//               {errors.email && (
-//                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-//               )}
-//             </div>
-//             <div className="flex flex-col">
-//               <div
-//                 className={`flex items-center gap-3 bg-gray-100 rounded-xl px-4 py-3 border ${
-//                   errors.password ? "border-red-500" : ""
-//                 }`}
-//               >
-//                 <FaLock className="text-gray-400" />
-//                 <input
-//                   type={showPassword ? "text" : "password"}
-//                   placeholder="Password"
-//                   value={adminLoginData.password}
-//                   onChange={(e) =>
-//                     setAdminLoginData({
-//                       ...adminLoginData,
-//                       password: e.target.value,
-//                     })
-//                   }
-//                   className="bg-transparent outline-none w-full text-sm"
-//                 />
-//                 <button
-//                   type="button"
-//                   onClick={() => setShowPassword(!showPassword)}
-//                 >
-//                   {showPassword ? <FaEyeSlash /> : <FaEye />}
-//                 </button>
-//               </div>
-
-//               {errors.password && (
-//                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-//               )}
-//             </div>
-
-//             <button
-//               type="submit"
-//               className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold shadow-lg hover:scale-[1.01] transition"
-//             >
-//               Login to Dashboard →
-//             </button>
-//           </form>
-
-//           <p className="text-center text-xs text-gray-400 mt-3">
-//             © 2026 EduExam Pro. Secured & Encrypted
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Adminlogin;
-
-
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import {
+  BookOpen,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Shield,
+  Users,
+  ArrowRight,
+} from "lucide-react";
 import { API_BASE_URL } from "@/pages/Services/api/api";
 
-const AdminLogin = () => {
+export default function AdminLogin() {
   const navigate = useNavigate();
 
-  const [data, setData] = useState({
-    email: "",
-    password: "",
-  });
+  // "super_admin" or "admin"
+  const [role, setRole] = useState<"super_admin" | "admin">("super_admin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!data.email || !data.password) {
-      toast.error("Please fill all fields");
+    if (!email.trim() || !password) {
+      toast.error("Please fill in all fields.");
       return;
     }
 
+    setIsLoading(true);
+    const endpoint = role === "super_admin" ? "/auth/super-admin/login" : "/auth/admin/login";
+
     try {
-      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      const response = await fetch(
-        `${API_BASE_URL}/auth/admin/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: data.email,
-            password: data.password,
-          }),
-        }
-      );
-
-      const result = await response.json();
+      const data = await response.json();
 
       if (response.ok) {
-        // ✅ Store data
         localStorage.clear();
         localStorage.setItem("isAdminAuthenticated", "true");
-        localStorage.setItem("adminToken", result.access_token);
-        localStorage.setItem("adminEmail", data.email);
+        localStorage.setItem("adminToken", data.access_token);
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("adminEmail", email);
+        localStorage.setItem("userRole", role);
 
-        toast.success("Login successful");
-
-        // ✅ Redirect
-        navigate("/admindashboard");
+        toast.success("Login successful!");
+        if (role === "super_admin") {
+          navigate("/superadmindashboard");
+        } else {
+          navigate("/admindashboard");
+        }
       } else {
-        toast.error(result.detail || "Invalid credentials");
+        toast.error(data.detail || "Invalid credentials.");
       }
-    } catch (error) {
-      toast.error("Network error. Try again.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Network error. Please try again.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-purple-50 px-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-3xl shadow-xl">
-        <h2 className="text-3xl font-bold text-center text-[#961BAC] mb-6">
-          Admin Login
-        </h2>
+    <div className="min-h-screen flex bg-slate-50 w-full overflow-x-hidden font-sans">
+      
+      {/* LEFT SIDE: Promotional & Branding Panel */}
+      <div className="w-1/2 hidden lg:flex flex-col justify-center items-center relative px-10 bg-gradient-to-br from-[#f5f3ff] via-[#faf5ff] to-[#fdf4ff] border-r border-purple-100/50">
+        
+        {/* Subtle Decorative Background Circles */}
+        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-purple-200/30 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-indigo-200/20 rounded-full blur-3xl -z-10"></div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
-          {/* EMAIL */}
-          <div>
-            <Label>Email</Label>
-            <Input
-              type="email"
-              value={data.email}
-              onChange={(e) =>
-                setData({ ...data, email: e.target.value })
-              }
-              className="h-12 rounded-xl"
+        {/* 2x2 Student Grid */}
+        <div className="relative grid grid-cols-2 gap-5 max-w-[420px]">
+          
+          {/* Top-Left Avatar Box */}
+          <div className="relative w-[190px] h-[190px] bg-gradient-to-br from-indigo-600 to-purple-600 flex items-end justify-center overflow-hidden rounded-l-[110px] shadow-lg hover:scale-105 transition-all duration-300">
+            <img
+              src="/login1.png"
+              alt="Student"
+              className="h-[210px] w-auto object-cover max-w-[110%] transform translate-y-2"
             />
           </div>
 
-          {/* PASSWORD */}
-          <div>
-            <Label>Password</Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={data.password}
-                onChange={(e) =>
-                  setData({ ...data, password: e.target.value })
-                }
-                className="h-12 rounded-xl pr-12"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
+          {/* Top-Right Avatar Box */}
+          <div className="relative w-[190px] h-[190px] bg-gradient-to-br from-purple-600 to-pink-500 rounded-[28px] flex items-end justify-center overflow-hidden shadow-lg hover:scale-105 transition-all duration-300">
+            <img
+              src="/login2.png"
+              alt="Student"
+              className="h-[210px] w-auto object-cover max-w-[110%] transform translate-y-2"
+            />
           </div>
 
-          {/* BUTTON */}
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 text-lg font-bold bg-gradient-to-r from-[#961BAC] to-[#33329C] rounded-xl"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </Button>
-        </form>
+          {/* Bottom-Left Avatar Box */}
+          <div className="relative w-[190px] h-[190px] bg-gradient-to-br from-purple-700 to-indigo-800 rounded-[28px] flex items-end justify-center overflow-hidden shadow-lg hover:scale-105 transition-all duration-300">
+            <img
+              src="/login3.png"
+              alt="Student"
+              className="h-[210px] w-auto object-cover max-w-[110%] transform translate-y-2"
+            />
+          </div>
+
+          {/* Bottom-Right Avatar Box */}
+          <div className="relative w-[190px] h-[190px] bg-gradient-to-br from-indigo-500 to-purple-700 flex items-end justify-center overflow-hidden rounded-r-[110px] shadow-lg hover:scale-105 transition-all duration-300">
+            <img
+              src="/login4.png"
+              alt="Student"
+              className="h-[210px] w-auto object-cover max-w-[110%] transform translate-y-2"
+            />
+          </div>
+        </div>
+
+        {/* Branding Slogans */}
+        <div className="mt-12 text-left w-full max-w-[420px] px-2">
+          <h2 className="text-2xl font-extrabold text-[#7c3aed] tracking-tight">
+            Built For Students
+          </h2>
+          <h3 className="text-4xl font-black text-slate-800 mt-1 leading-tight">
+            Trusted by Educators.
+          </h3>
+          <p className="text-slate-500 text-sm mt-3.5 leading-relaxed font-semibold">
+            Login confidently with a platform designed specifically for educational institutions
+          </p>
+        </div>
+      </div>
+
+      {/* RIGHT SIDE: Login Interactive Panel */}
+      <div className="flex-1 flex flex-col justify-center items-center px-6 lg:px-12 bg-gradient-to-tr from-slate-50 to-slate-100/50">
+        
+        {/* Main Floating Container */}
+        <div className="w-full max-w-md bg-white rounded-[32px] shadow-[0_20px_50px_rgba(124,58,237,0.06)] border border-slate-100 overflow-hidden">
+          
+          <div className="p-8 sm:p-10">
+            
+            {/* Header / Brand Icon */}
+            <div className="text-center mb-8">
+              <div className="w-14 h-14 mx-auto bg-gradient-to-tr from-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-[0_8px_20px_rgba(124,58,237,0.25)]">
+                <BookOpen size={26} />
+              </div>
+
+              <h2 className="text-2xl font-black text-slate-800 mt-5">
+                Welcome Back! 👋
+              </h2>
+
+              <p className="text-slate-400 text-xs font-semibold mt-1">
+                Please select your role and login to continue
+              </p>
+            </div>
+
+            {/* Role Selection Container */}
+            <div className="mb-7">
+              <div className="flex items-center gap-1.5 mb-3 text-slate-400 text-[11px] font-bold uppercase tracking-wider">
+                <Shield size={13} className="text-[#8b5cf6]" />
+                <span>Choose Your Role</span>
+              </div>
+
+              <div className="flex gap-4">
+                
+                {/* Super Admin Card */}
+                <button
+                  type="button"
+                  onClick={() => setRole("super_admin")}
+                  className={`relative flex-1 p-4.5 rounded-2xl transition-all duration-300 border text-left flex flex-col justify-between h-[105px] group ${
+                    role === "super_admin"
+                      ? "text-white border-transparent scale-[1.02]"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-purple-200 hover:bg-slate-50/50"
+                  }`}
+                  style={
+                    role === "super_admin"
+                      ? {
+                          background: "linear-gradient(135deg, #8E51FF 0%, #7c3aed 100%)",
+                          borderTop: "2.65px solid #C27AFF",
+                          boxShadow: "0px 8px 24px -6px rgba(124,58,237,0.35)",
+                        }
+                      : {}
+                  }
+                >
+                  {/* Decorative tiny yellow badge */}
+                  {role === "super_admin" && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-white animate-pulse" />
+                  )}
+                  
+                  <div className={`p-2 w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                    role === "super_admin" ? "bg-white/20" : "bg-purple-50 text-[#8b5cf6] group-hover:bg-purple-100"
+                  }`}>
+                    <Shield size={18} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs leading-none">Super Admin</p>
+                    <p className={`text-[10px] mt-0.5 font-medium leading-none ${role === "super_admin" ? "text-purple-100" : "text-slate-400"}`}>
+                      Full system control
+                    </p>
+                  </div>
+                </button>
+
+                {/* Admin Card */}
+                <button
+                  type="button"
+                  onClick={() => setRole("admin")}
+                  className={`relative flex-1 p-4.5 rounded-2xl transition-all duration-300 border text-left flex flex-col justify-between h-[105px] group ${
+                    role === "admin"
+                      ? "text-white border-transparent scale-[1.02]"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-purple-200 hover:bg-slate-50/50"
+                  }`}
+                  style={
+                    role === "admin"
+                      ? {
+                          background: "linear-gradient(135deg, #8E51FF 0%, #7c3aed 100%)",
+                          borderTop: "2.65px solid #C27AFF",
+                          boxShadow: "0px 8px 24px -6px rgba(124,58,237,0.35)",
+                        }
+                      : {}
+                  }
+                >
+                  {/* Decorative tiny yellow badge */}
+                  {role === "admin" && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-yellow-400 border border-white animate-pulse" />
+                  )}
+
+                  <div className={`p-2 w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                    role === "admin" ? "bg-white/20" : "bg-purple-50 text-[#8b5cf6] group-hover:bg-purple-100"
+                  }`}>
+                    <Users size={18} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-xs leading-none">Admin</p>
+                    <p className={`text-[10px] mt-0.5 font-medium leading-none ${role === "admin" ? "text-purple-100" : "text-slate-400"}`}>
+                      Manage platform
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Login Input Form */}
+            <form onSubmit={handleLogin} className="space-y-4">
+              
+              {/* Email Input */}
+              <div className="relative flex items-center bg-slate-50 rounded-2xl border border-slate-200/80 px-4 py-3.5 focus-within:bg-white focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-100 transition-all duration-300">
+                <Mail size={18} className="text-slate-400 mr-3" />
+                <input
+                  type="email"
+                  required
+                  placeholder="Email / Login ID"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-transparent outline-none w-full text-sm font-semibold text-slate-700 placeholder-slate-400"
+                />
+              </div>
+
+              {/* Password Input */}
+              <div className="relative flex items-center bg-slate-50 rounded-2xl border border-slate-200/80 px-4 py-3.5 focus-within:bg-white focus-within:border-purple-500 focus-within:ring-4 focus-within:ring-purple-100 transition-all duration-300">
+                <Lock size={18} className="text-slate-400 mr-3" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-transparent outline-none w-full text-sm font-semibold text-slate-700 placeholder-slate-400 pr-8"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+              {/* Extras Row (Remember Me & Forgot Password) */}
+              <div className="flex items-center justify-between text-xs font-bold pt-1.5">
+                <label className="flex items-center gap-2 text-slate-500 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 transition-colors"
+                  />
+                  <span>Remember Me</span>
+                </label>
+                <a
+                  href="/forgotpassword"
+                  className="text-[#8E51FF] hover:text-[#7c3aed] hover:underline transition-colors"
+                >
+                  Forgot Password?
+                </a>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-4 mt-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-sm shadow-[0_8px_25px_-4px_rgba(124,58,237,0.3)] hover:shadow-[0_12px_30px_-4px_rgba(124,58,237,0.4)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 group disabled:opacity-50"
+              >
+                <span>{isLoading ? "Signing in..." : "Login to Dashboard"}</span>
+                {!isLoading && (
+                  <ArrowRight size={16} className="transform group-hover:translate-x-1 transition-transform" />
+                )}
+              </button>
+            </form>
+            
+            {/* Divider */}
+            <div className="relative flex items-center justify-center my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-100"></div>
+              </div>
+              <span className="relative px-3 bg-white text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                Secure Login
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400/80 mt-6 select-none">
+          <Lock size={12} className="text-slate-400" />
+          <span>© 2026 EduExam Pro. Secured & Encrypted</span>
+        </div>
+
       </div>
     </div>
   );
-};
-
-export default AdminLogin;
+}

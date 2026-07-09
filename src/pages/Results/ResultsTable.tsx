@@ -35,7 +35,7 @@ function ResultsTable({ results }: ResultsTableProps) {
                 Name
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Exam
+                Exam Type
               </th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Score
@@ -64,7 +64,7 @@ function ResultsTable({ results }: ResultsTableProps) {
                 <td className="px-6 py-4 font-medium text-gray-800">
                   {item.name}
                 </td>
-                <td className="px-6 py-4">{item.exam}</td>
+                <td className="px-6 py-4 text-gray-600 capitalize">{item.examType}</td>
                 <td className="px-6 py-4">{item.score}</td>
 
                 {/* Percentage with bar */}

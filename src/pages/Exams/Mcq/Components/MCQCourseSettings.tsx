@@ -25,13 +25,41 @@ const MCQCourseSettings: React.FC<MCQCourseSettingsProps> = ({
         if (response.ok) {
           const data = await response.json();
           setCoursesData(Array.isArray(data) ? data : []);
+
+          if (examId && examId > 0) {
+            const checkedIds: number[] = [];
+            await Promise.all(
+              data.map(async (course: any) => {
+                try {
+                  const mapRes = await fetch(
+                    `${API_BASE_URL}/ind/mcq/admin/mapped-exams?course_id=${course.id}`,
+                    { headers }
+                  );
+                  if (mapRes.ok) {
+                    const mapData = await mapRes.json();
+                    const examList = Array.isArray(mapData) ? mapData : (mapData.items || mapData.data || mapData.exams || []);
+                    const isMapped = examList.some((e: any) => (e.id || e.exam_id) === examId);
+                    if (isMapped) {
+                      checkedIds.push(course.id);
+                    }
+                  }
+                } catch (e) {
+                  console.error(`Error checking map for course ${course.id}:`, e);
+                }
+              })
+            );
+            setSelectedCourseIds(checkedIds);
+            if (onSelectionChange) {
+              onSelectionChange(checkedIds);
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch courses data", err);
       }
     };
     fetchCourses();
-  }, []);
+  }, [examId]);
 
   const handleToggle = async (courseId: number) => {
     const isCurrentlySelected = selectedCourseIds.includes(courseId);
@@ -87,6 +115,43 @@ const MCQCourseSettings: React.FC<MCQCourseSettingsProps> = ({
 
         // Revert selection on failure
         const revertedIds = selectedCourseIds.filter((id) => id !== courseId);
+        setSelectedCourseIds(revertedIds);
+        if (onSelectionChange) onSelectionChange(revertedIds);
+      }
+    } else {
+      // If we are unchecking the box (unselecting), detach the exam from the course
+      try {
+        const adminToken = localStorage.getItem("adminToken");
+        const headers: Record<string, string> = {
+          "Accept": "application/json",
+        };
+        if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
+
+        const response = await fetch(
+          `${API_BASE_URL}/ind/mcq/admin/detach?course_id=${courseId}&exam_id=${examId}`,
+          {
+            method: "DELETE",
+            headers,
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Failed to detach course ${courseId}:`, errorText);
+          alert(`Failed to detach course: ${errorText}`);
+
+          // Revert selection on failure (keep the checkbox checked)
+          const revertedIds = [...selectedCourseIds];
+          setSelectedCourseIds(revertedIds);
+          if (onSelectionChange) onSelectionChange(revertedIds);
+        } else {
+          console.log(`Successfully detached course ${courseId} from exam ${examId}`);
+        }
+      } catch (error) {
+        console.error("Error detaching course:", error);
+
+        // Revert selection on failure (keep the checkbox checked)
+        const revertedIds = [...selectedCourseIds];
         setSelectedCourseIds(revertedIds);
         if (onSelectionChange) onSelectionChange(revertedIds);
       }

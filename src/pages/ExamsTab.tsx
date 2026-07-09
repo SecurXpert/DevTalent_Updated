@@ -1320,7 +1320,7 @@ export default function ExamPage() {
               Exam Management
             </h1>
             <p className="text-[13px] text-[#6b7280] sm:text-[14px] lg:text-[15px]">
-              Create and hhhmanage all exams on the platform
+              Create and manage all exams on the platform
             </p>
           </div>
 

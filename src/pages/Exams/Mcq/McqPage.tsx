@@ -289,6 +289,20 @@ const MCQPage: React.FC = () => {
       const questionData = await response.json();
       console.log('MCQ question saved successfully:', questionData);
 
+      const dbQuestionId = questionData.id || questionData.question_id || questionData.question?.id;
+      const dbOptions = questionData.options || questionData.question?.options;
+      const dbOptionIds = Array.isArray(dbOptions) ? dbOptions.map((opt: any) => opt.id || null) : undefined;
+
+      if (dbQuestionId) {
+        setQuestions((prev) =>
+          prev.map((q) => (q.id === question.id ? {
+            ...q,
+            id: dbQuestionId,
+            optionIds: dbOptionIds || q.optionIds
+          } : q))
+        );
+      }
+
       // Update loading message with success
       loadingMessage.textContent = 'MCQ question saved successfully!';
       loadingMessage.style.background = '#10b981';
@@ -622,7 +636,7 @@ const MCQPage: React.FC = () => {
   const updateMcqQuestion = (
     id: number,
     field: keyof McqQuestion,
-    value: string | number | null | string[],
+    value: any,
   ) => {
     setQuestions((prev) =>
       prev.map((question) =>
@@ -734,7 +748,7 @@ const MCQPage: React.FC = () => {
 
       const examData = await response.json();
       const newExamId = examData.exam?.id || examData.id || examData.exam_id;
-      
+
       // Attach the newly created exam to the selected courses
       if (selectedCourseIds.length > 0 && newExamId) {
         loadingMessage.textContent = 'Attaching exam to courses...';
@@ -1045,8 +1059,7 @@ const MCQPage: React.FC = () => {
         <div className="mx-auto max-w-[1280px] lg:max-w-[1440px]">
           <button
             onClick={() => {
-              setShowCreatePage(false);
-              resetCreateForm();
+              navigate("/exams");
             }}
             className="mb-3 flex items-center gap-2 text-[14px] text-[#5b5cf0]"
           >

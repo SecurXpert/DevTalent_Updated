@@ -11,6 +11,7 @@ interface QuestionType {
   backendId?: number;
   questionText: string;
   options: string[];
+  optionIds?: (number | null)[];
   correctAnswer: number | null;
   marks: number;
 }
@@ -38,23 +39,23 @@ const MCQQuestionsSection: React.FC<MCQQuestionsSectionProps> = ({ questions, se
 
   const removeQuestion = async (id: number | string) => {
     const questionToRemove = questions.find(q => q.id === id);
-    
+
     // If it exists in backend, make API call to delete
     if (questionToRemove && questionToRemove.backendId) {
       if (!window.confirm("Are you sure you want to delete this question? This action cannot be undone.")) {
         return; // Cancel deletion
       }
-      
+
       try {
         const adminToken = localStorage.getItem('adminToken');
         const headers: Record<string, string> = {};
         if (adminToken) headers['Authorization'] = `Bearer ${adminToken}`;
-        
+
         const response = await fetch(`${API_BASE_URL}/ind/mcq/admin/questions/${questionToRemove.backendId}`, {
           method: 'DELETE',
           headers
         });
-        
+
         if (!response.ok) {
           throw new Error("Delete request failed");
         }
@@ -149,10 +150,78 @@ const MCQQuestionsSection: React.FC<MCQQuestionsSectionProps> = ({ questions, se
                 </span>
               </div>
 
-              <Trash2
-                className="w-5 h-5 text-red-500 cursor-pointer"
-                onClick={() => removeQuestion(q.id)}
-              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={async () => {
+                    const updatedOptions = [...q.options, "New Option"];
+                    const updatedOptionIds = q.optionIds
+                      ? [...q.optionIds, null]
+                      : [...q.options.map(() => null), null];
+
+                    handleChange(q.id, "options", updatedOptions);
+                    handleChange(q.id, "optionIds", updatedOptionIds);
+
+                    console.log("Add Option clicked in EditMcq! q.id:", q.id, "q.backendId:", q.backendId);
+
+                    const dbId = q.backendId ||
+                      (q.id && !isNaN(Number(q.id)) && Number(q.id) > 0 && Number(q.id) < 1000000000000 ? Number(q.id) : null);
+
+                    console.log("Resolved dbId:", dbId);
+
+                    if (dbId) {
+                      try {
+                        const adminToken = localStorage.getItem("adminToken");
+                        const headers: Record<string, string> = {
+                          "Content-Type": "application/json",
+                          "Accept": "application/json",
+                        };
+                        if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
+
+                        console.log(`Sending POST to: ${API_BASE_URL}/ind/mcq/admin/questions/${dbId}/options`);
+                        const response = await fetch(
+                          `${API_BASE_URL}/ind/mcq/admin/questions/${dbId}/options`,
+                          {
+                            method: "POST",
+                            headers,
+                            body: JSON.stringify({
+                              text: "New Option",
+                              image_url: "",
+                            }),
+                          }
+                        );
+                        if (!response.ok) {
+                          const errText = await response.text();
+                          console.error("Failed to add option on server:", errText);
+                          alert("Failed to add option on server: " + errText);
+                        } else {
+                          const optionData = await response.json();
+                          console.log("Successfully added option on server:", optionData);
+                          const newOptionId = optionData.id || optionData.option_id || optionData.option?.id || (typeof optionData === "number" ? optionData : (typeof optionData === "string" && !isNaN(Number(optionData)) ? Number(optionData) : null));
+                          if (newOptionId) {
+                            const nextOptionIds = [...updatedOptionIds];
+                            nextOptionIds[nextOptionIds.length - 1] = newOptionId;
+                            handleChange(q.id, "optionIds", nextOptionIds);
+                          }
+                        }
+                      } catch (err) {
+                        console.error("Error calling add option API:", err);
+                        alert("Error calling add option API: " + (err instanceof Error ? err.message : String(err)));
+                      }
+                    } else {
+                      console.warn("API not hit: This question is a new question and does not have a database ID yet.");
+                      alert("This question does not have a database ID yet. If it is new, it will be saved to the database when you click 'Save Changes' at the bottom of the page.");
+                    }
+                  }}
+                  className="text-[#4F39F6] hover:underline text-[14px] font-semibold flex items-center gap-1"
+                  style={{ color: "#4F39F6" }}
+                >
+                  +Add Option
+                </button>
+                <Trash2
+                  className="w-5 h-5 text-red-500 cursor-pointer"
+                  onClick={() => removeQuestion(q.id)}
+                />
+              </div>
             </div>
 
             {/* Question Text */}
@@ -167,31 +236,98 @@ const MCQQuestionsSection: React.FC<MCQQuestionsSectionProps> = ({ questions, se
             </div>
 
             {/* Options */}
-            <div className="mb-4 space-y-3">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-[#374151] mb-2">
                 Options
               </label>
-              {q.options.map((option, optionIndex) => (
-                <div key={optionIndex} className="flex items-center gap-3">
-                  <input
-                    type="radio"
-                    name={`correct-${q.id}`}
-                    checked={q.correctAnswer === optionIndex}
-                    onChange={() =>
-                      handleChange(q.id, "correctAnswer", optionIndex)
-                    }
-                    className="w-4 h-4 text-blue-600"
-                  />
-                  <InputField
-                    label={`Option ${String.fromCharCode(65 + optionIndex)}`}
-                    value={option}
-                    onChange={(value) =>
-                      handleOptionChange(q.id, optionIndex, value)
-                    }
-                    placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
-                  />
-                </div>
-              ))}
+              <div className="space-y-3">
+                {q.options.map((option, optionIndex) => (
+                  <div key={optionIndex} className="flex items-center gap-3 w-full">
+                    <div className="flex items-center gap-4 flex-1 rounded-[12px] border border-[#e1e3ea] bg-[#f9fafb] p-2 px-3 sm:px-4 focus-within:border-blue-400 focus-within:bg-white transition-all">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-300 bg-white text-[13px] font-semibold text-gray-500 shadow-sm">
+                        {String.fromCharCode(65 + optionIndex)}
+                      </div>
+                      <input
+                        type="text"
+                        value={option}
+                        onChange={(e) => handleOptionChange(q.id, optionIndex, e.target.value)}
+                        className="flex-1 bg-transparent py-1 text-[14px] text-gray-700 outline-none placeholder:text-gray-400"
+                        placeholder={`Option ${String.fromCharCode(65 + optionIndex)}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleChange(q.id, "correctAnswer", optionIndex)}
+                        className={`text-[13px] font-semibold px-3 py-1 rounded-lg transition-all ${q.correctAnswer === optionIndex
+                          ? "bg-green-100 text-green-700 border border-green-300"
+                          : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                          }`}
+                      >
+                        Correct
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (q.options.length <= 2) {
+                          alert("A question must have at least 2 options.");
+                          return;
+                        }
+
+                        const optionId = q.optionIds?.[optionIndex];
+                        console.log("Deleting option in EditMcq! optionIndex:", optionIndex, "optionId:", optionId);
+
+                        if (optionId) {
+                          try {
+                            const adminToken = localStorage.getItem("adminToken");
+                            const headers: Record<string, string> = {};
+                            if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
+
+                            console.log(`Sending DELETE to: ${API_BASE_URL}/ind/mcq/admin/options/${optionId}`);
+                            const deleteResponse = await fetch(
+                              `${API_BASE_URL}/ind/mcq/admin/options/${optionId}`,
+                              {
+                                method: "DELETE",
+                                headers,
+                              }
+                            );
+                            if (!deleteResponse.ok) {
+                              const errText = await deleteResponse.text();
+                              console.error("Failed to delete option on server:", errText);
+                              alert("Failed to delete option on server: " + errText);
+                            } else {
+                              console.log("Successfully deleted option on server");
+                            }
+                          } catch (err) {
+                            console.error("Error calling delete option API:", err);
+                          }
+                        }
+
+                        const updatedOptions = q.options.filter((_, idx) => idx !== optionIndex);
+                        const updatedOptionIds = q.optionIds ? q.optionIds.filter((_, idx) => idx !== optionIndex) : undefined;
+
+                        let newCorrect = q.correctAnswer;
+                        if (q.correctAnswer === optionIndex) {
+                          newCorrect = null;
+                        } else if (q.correctAnswer !== null && q.correctAnswer > optionIndex) {
+                          newCorrect = q.correctAnswer - 1;
+                        }
+
+                        handleChange(q.id, "options", updatedOptions);
+                        if (updatedOptionIds) {
+                          handleChange(q.id, "optionIds", updatedOptionIds);
+                        }
+                        handleChange(q.id, "correctAnswer", newCorrect);
+                      }}
+                      className="text-red-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[12px] text-[#6b7280]">
+                Click "Correct" next to the correct answer option
+              </p>
             </div>
 
             {/* Marks */}
@@ -209,27 +345,7 @@ const MCQQuestionsSection: React.FC<MCQQuestionsSectionProps> = ({ questions, se
         ))}
       </div>
 
-      {/* Supported Course Types */}
-      <div className="rounded-[16px] border border-[#e1e3ea] bg-white p-4 sm:p-5">
-        <h2 className="text-[22px] font-semibold text-[#1f2937] mb-6">
-          Supported Course Types
-        </h2>
-
-        <div className="flex flex-wrap gap-10">
-          {["Python", "Java", "C++", "JavaScript"].map((course) => (
-            <label
-              key={course}
-              className="flex items-center gap-3 text-[#374151] cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                className="w-5 h-5 rounded-md border-[#d1d5db] accent-blue-600"
-              />
-              <span className="text-[14px] font-medium">{course}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+   
     </div>
   );
 };
@@ -275,17 +391,18 @@ const EditMcq: React.FC<EditMcqProps> = ({
         if (adminToken) headers['Authorization'] = `Bearer ${adminToken}`;
 
         const response = await fetch(`${API_BASE_URL}/ind/mcq/admin/exams/${examId}/questions?limit=500`, { headers });
-        
+
         if (response.ok) {
           const data = await response.json();
           const fetchedQuestions = data.items || data;
-          
+
           if (fetchedQuestions && fetchedQuestions.length > 0) {
             const mappedQuestions = fetchedQuestions.map((q: any) => ({
               id: q.id,
               backendId: q.id,
               questionText: q.text || q.questionText || "",
               options: q.options ? q.options.map((opt: any) => opt.text || opt) : ["", "", "", ""],
+              optionIds: q.options ? q.options.map((opt: any) => opt.id || null) : [null, null, null, null],
               correctAnswer: q.correct_index ?? null,
               marks: q.marks || 1
             }));

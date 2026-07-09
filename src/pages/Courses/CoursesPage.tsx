@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiSearch, FiEdit, FiTrash2, FiPlus, FiBookOpen } from 'react-icons/fi';
+import { FiSearch, FiEdit, FiTrash2, FiPlus, FiBookOpen, FiChevronDown, FiChevronRight } from 'react-icons/fi';
 import { API_BASE_URL } from '@/pages/Services/api/api';
 
 const CourseManagement = () => {
@@ -9,6 +9,96 @@ const CourseManagement = () => {
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [expandedCourseId, setExpandedCourseId] = useState<number | null>(null);
+  const [courseExams, setCourseExams] = useState<Record<number, { mcq: any[], coding: any[], loading: boolean }>>({});
+
+  const fetchExamsForCourse = async (courseId: number, currentCourses?: any[]) => {
+    try {
+      const adminToken = localStorage.getItem('adminToken');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (adminToken) {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+
+      setCourseExams(prev => ({
+        ...prev,
+        [courseId]: {
+          mcq: prev[courseId]?.mcq || [],
+          coding: prev[courseId]?.coding || [],
+          loading: true
+        }
+      }));
+
+      const [mcqRes, codingRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/ind/mcq/admin/mapped-exams?course_id=${courseId}`, { headers }),
+        fetch(`${API_BASE_URL}/ind/coding/admin/mapped-coding-exams?course_id=${courseId}`, { headers })
+      ]);
+
+      let mcqExams = [];
+      let codingExams = [];
+
+      if (mcqRes.ok) {
+        const data = await mcqRes.json();
+        mcqExams = Array.isArray(data) ? data : (data.items || data.data || data.exams || []);
+      }
+      if (codingRes.ok) {
+        const data = await codingRes.json();
+        codingExams = Array.isArray(data) ? data : (data.items || data.data || data.exams || []);
+      }
+
+      setCourseExams(prev => ({
+        ...prev,
+        [courseId]: {
+          mcq: mcqExams,
+          coding: codingExams,
+          loading: false
+        }
+      }));
+
+      setCourses(prevCourses => {
+        const targetList = prevCourses.length > 0 ? prevCourses : (currentCourses || []);
+        return targetList.map(c => {
+          if (c.id === courseId) {
+            const total = mcqExams.length + codingExams.length;
+            const activeMcq = mcqExams.filter((e: any) => e.is_active || e.status === 'Active').length;
+            const activeCoding = codingExams.filter((e: any) => e.is_active || e.status === 'Active').length;
+            return {
+              ...c,
+              totalExams: total,
+              examsAvailable: total,
+              activeExams: activeMcq + activeCoding
+            };
+          }
+          return c;
+        });
+      });
+
+    } catch (error) {
+      console.error(`Error fetching exams for course ${courseId}:`, error);
+      setCourseExams(prev => ({
+        ...prev,
+        [courseId]: {
+          mcq: prev[courseId]?.mcq || [],
+          coding: prev[courseId]?.coding || [],
+          loading: false
+        }
+      }));
+    }
+  };
+
+  const handleToggleExpand = (course: any) => {
+    if (expandedCourseId === course.id) {
+      setExpandedCourseId(null);
+    } else {
+      setExpandedCourseId(course.id);
+      if (!courseExams[course.id] || courseExams[course.id].loading) {
+        fetchExamsForCourse(course.id);
+      }
+    }
+  };
 
   // Fetch courses from API
   useEffect(() => {
@@ -41,6 +131,11 @@ const CourseManagement = () => {
             activeExams: course.is_active ? 1 : 0,
           }));
           setCourses(mappedCourses);
+
+          // Proactively fetch exam count for all loaded courses in the background
+          mappedCourses.forEach((course: any) => {
+            fetchExamsForCourse(course.id, mappedCourses);
+          });
         } else {
           console.error('Failed to fetch courses:', response.status);
         }
@@ -147,9 +242,6 @@ const CourseManagement = () => {
                 Course Type
               </th>
               <th className="text-left px-6 py-4 text-sm font-bold text-gray-900 uppercase tracking-normal">
-                Course ID
-              </th>
-              <th className="text-left px-6 py-4 text-sm font-bold text-gray-900 uppercase tracking-normal">
                 Active Exams
               </th>
               <th className="text-left px-6 py-4 text-sm font-bold text-gray-900 uppercase tracking-normal">
@@ -158,56 +250,59 @@ const CourseManagement = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {courses.map((course) => (
-              <tr key={course.id} className="hover:bg-gray-100 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-md" style={{ background: 'linear-gradient(135deg, #615FFF 0%, #9810FA 100%)' }}>
-                      <FiBookOpen className="text-white text-lg" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">{course.name}</p>
-                      <p className="text-xs text-gray-500">{course.examsAvailable} Exams Available</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-gray-900 font-semibold">{course.totalExams}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 rounded-full font-inter font-medium">
-                    {course.type}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-gray-900 font-semibold">{course.id}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#DCFCE7] text-[#008236]">
-                    {course.activeExams} Active
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        localStorage.setItem('editingCourseId', course.id.toString());
-                        navigate('/edit-course');
-                      }}
-                      className="text-blue-500 hover:text-blue-800 transition-colors"
-                    >
-                      <FiEdit size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteCourse(course.id)}
-                      className="text-red-500 hover:text-red-800 transition-colors"
-                    >
-                      <FiTrash2 size={18} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {courses.map((course) => {
+              const isExpanded = expandedCourseId === course.id;
+              const examsData = courseExams[course.id];
+              return (
+                <React.Fragment key={course.id}>
+                  <tr className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-md flex-shrink-0" style={{ background: 'linear-gradient(135deg, #615FFF 0%, #9810FA 100%)' }}>
+                          <FiBookOpen className="text-white text-lg" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">{course.name}</p>
+                          <p className="text-xs text-gray-500">{course.examsAvailable} exams available</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-gray-900 font-semibold">{course.totalExams}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full font-inter font-medium">
+                        {course.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 rounded-full text-sm font-medium bg-[#DCFCE7] text-[#008236]">
+                        {course.activeExams} Active
+                      </span>
+                    </td>
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => {
+                            localStorage.setItem('editingCourseId', course.id.toString());
+                            navigate('/edit-course');
+                          }}
+                          className="text-blue-500 hover:text-blue-800 transition-colors"
+                        >
+                          <FiEdit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCourse(course.id)}
+                          className="text-red-500 hover:text-red-800 transition-colors"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -223,7 +318,7 @@ const CourseManagement = () => {
                 </div>
                 <div>
                   <p className="font-medium text-gray-800">{course.name}</p>
-                  <p className="text-xs text-gray-500">{course.examsAvailable} Exams Available</p>
+                  <p className="text-xs text-gray-500">{course.examsAvailable} exams available</p>
                 </div>
               </div>
             </div>

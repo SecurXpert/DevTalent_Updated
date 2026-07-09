@@ -355,6 +355,81 @@ export default function AdminDashboard() {
           console.error("Error fetching completed exams count:", e);
         }
 
+        // Fetch registered students count and recent registrations
+        try {
+          const adminToken = localStorage.getItem('adminToken');
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+          if (adminToken) {
+            headers['Authorization'] = `Bearer ${adminToken}`;
+          }
+
+          const studentsRes = await fetch('http://192.168.0.103:8000/student/students', {
+            headers,
+          });
+
+          if (studentsRes.ok) {
+            const studentsData = await studentsRes.json();
+
+            // Extract registered students count
+            let studentCount = "0";
+            if (studentsData && typeof studentsData.count === "number") {
+              studentCount = String(studentsData.count);
+            } else if (studentsData && Array.isArray(studentsData.students)) {
+              studentCount = String(studentsData.students.length);
+            }
+
+            const registeredCardIndex = response.stats.findIndex(s => s.title === "Total Registered students");
+            if (registeredCardIndex !== -1) {
+              response.stats[registeredCardIndex].value = studentCount;
+            }
+
+            // Extract recent registrations (up to 5)
+            if (studentsData && Array.isArray(studentsData.students)) {
+              // Helper to calculate initials
+              const getInitials = (name: string) => {
+                const parts = name.trim().split(/\s+/);
+                if (parts.length === 0 || !parts[0]) return "?";
+                if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+              };
+
+              // Helper to format date (e.g. "2026-06-23T07:43:31" -> "23/06")
+              const formatDate = (dateStr: string) => {
+                try {
+                  const d = new Date(dateStr);
+                  if (isNaN(d.getTime())) return "";
+                  const day = String(d.getDate()).padStart(2, '0');
+                  const month = String(d.getMonth() + 1).padStart(2, '0');
+                  return `${day}/${month}`;
+                } catch {
+                  return "";
+                }
+              };
+
+              // Sort by registered_date descending to get the most recent registrations
+              const sortedStudents = [...studentsData.students].sort((a, b) => {
+                const dateA = new Date(a.registered_date || 0).getTime();
+                const dateB = new Date(b.registered_date || 0).getTime();
+                return dateB - dateA;
+              });
+
+              const recentRegistrations = sortedStudents.slice(0, 5).map((student: any) => ({
+                id: student.id,
+                name: student.full_name || "Unknown Student",
+                course: student.college_name || "N/A",
+                date: formatDate(student.registered_date) || "N/A",
+                initials: getInitials(student.full_name || "Unknown"),
+              }));
+
+              response.registrations = recentRegistrations;
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching registered students count:", e);
+        }
+
         setData(response);
       } catch (err: any) {
         setError(err.message || "Failed to load dashboard");

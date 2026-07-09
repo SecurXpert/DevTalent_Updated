@@ -33,8 +33,8 @@ const baseCourses: CourseItem[] = [
 
 const ExamsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [courses, setCourses] = useState<CourseItem[]>(baseCourses);
-  const [expandedCourseId, setExpandedCourseId] = useState<number | null>(1);
+  const [courses, setCourses] = useState<CourseItem[]>([]);
+  const [expandedCourseId, setExpandedCourseId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
 
@@ -65,7 +65,7 @@ const ExamsPage: React.FC = () => {
 
 
   useEffect(() => {
-    const fetchExams = async () => {
+    const fetchCoursesAndExams = async () => {
       try {
         const adminToken = localStorage.getItem('adminToken');
         const headers: Record<string, string> = {
@@ -77,73 +77,62 @@ const ExamsPage: React.FC = () => {
           headers['Authorization'] = `Bearer ${adminToken}`;
         }
 
-        const [mcqRes, codingRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/ind/mcq/admin/exams?active_only=true&limit=200`, {
-            method: 'GET',
-            headers,
-          }).catch(e => { console.error(e); return null; }),
-          fetch(`${API_BASE_URL}/ind/coding/admin/exams?active_only=true&limit=200`, {
-            method: 'GET',
-            headers,
-          }).catch(e => { console.error(e); return null; })
-        ]);
+        const coursesRes = await fetch(`${API_BASE_URL}/admin/catalog/courses`, {
+          method: 'GET',
+          headers,
+        });
 
-        const updatedCourses = [
-          { id: 1, name: "MCQ Exams", availableExams: 0, totalExams: 0, activeExams: 0, totalStudents: 0, exams: [] as ExamItem[] },
-          { id: 2, name: "Coding Exams", availableExams: 0, totalExams: 0, activeExams: 0, totalStudents: 0, exams: [] as ExamItem[] }
-        ];
-
-        // 1. Process MCQ Exams
-        if (mcqRes && mcqRes.ok) {
-          const data = await mcqRes.json();
-          let examsArray = Array.isArray(data) ? data : (data.items || data.data || data.exams || []);
-          
-          const mappedExams: ExamItem[] = examsArray.map((exam: any) => ({
-            id: exam.id || exam.exam_id,
-            title: exam.title || "Untitled Exam",
-            type: "MCQ",
-            questions: exam.question_count ?? exam.questions_count ?? 0,
-            duration: `${exam.duration_minutes || exam.duration || 60} min`,
-            enrolled: exam.enrolled_students || 0,
-            date: exam.created_at ? exam.created_at.split('T')[0] : "2026-01-01",
-            status: exam.is_active ? "Active" : "Draft",
-            description: exam.description || "",
-            totalMarks: exam.total_marks || 100,
-            passingScore: exam.pass_percentage || 60,
-          }));
-
-          updatedCourses[0].exams = mappedExams;
-          updatedCourses[0].availableExams = mappedExams.length;
-          updatedCourses[0].totalExams = mappedExams.length;
-          updatedCourses[0].activeExams = mappedExams.filter(e => e.status === 'Active').length;
-          updatedCourses[0].totalStudents = mappedExams.reduce((acc, curr) => acc + curr.enrolled, 0);
+        if (!coursesRes.ok) {
+          console.error('Failed to fetch courses:', coursesRes.status);
+          return;
         }
 
-        // 2. Process Coding Exams
-        if (codingRes && codingRes.ok) {
-          const data = await codingRes.json();
-          let examsArray = Array.isArray(data) ? data : (data.items || data.data || data.exams || []);
-          
-          const mappedExams: ExamItem[] = examsArray.map((exam: any) => ({
-            id: exam.id || exam.exam_id,
-            title: exam.title || "Untitled Exam",
-            type: "Coding",
-            questions: exam.question_count ?? exam.questions_count ?? 0,
-            duration: `${exam.duration_minutes || exam.duration || 60} min`,
-            enrolled: exam.enrolled_students || 0,
-            date: exam.created_at ? exam.created_at.split('T')[0] : "2026-01-01",
-            status: exam.is_active ? "Active" : "Draft",
-            description: exam.description || "",
-            totalMarks: exam.total_marks || 100,
-            passingScore: exam.pass_percentage || 60,
-          }));
+        const coursesData = await coursesRes.json();
+        
+        const updatedCourses: CourseItem[] = await Promise.all(
+          coursesData.map(async (course: any) => {
+            let mappedExams: ExamItem[] = [];
+            try {
+              const mappedRes = await fetch(`${API_BASE_URL}/ind/mcq/admin/courses/${course.id}/mapped-exams`, {
+                method: 'GET',
+                headers,
+              });
 
-          updatedCourses[1].exams = mappedExams;
-          updatedCourses[1].availableExams = mappedExams.length;
-          updatedCourses[1].totalExams = mappedExams.length;
-          updatedCourses[1].activeExams = mappedExams.filter(e => e.status === 'Active').length;
-          updatedCourses[1].totalStudents = mappedExams.reduce((acc, curr) => acc + curr.enrolled, 0);
-        }
+              if (mappedRes.ok) {
+                const data = await mappedRes.json();
+                const items = data.items || [];
+                mappedExams = items.map((item: any) => {
+                  const exam = item.exam || {};
+                  return {
+                    id: exam.id,
+                    title: exam.title || "Untitled Exam",
+                    type: item.exam_kind === "mcq" ? "MCQ Only" : item.exam_kind === "coding" ? "Coding Only" : (exam.type || "MCQ Only"),
+                    questions: exam.question_count || 0,
+                    duration: `${exam.duration_minutes || 60} min`,
+                    enrolled: exam.enrolled_students || 0,
+                    date: exam.created_at ? exam.created_at.split('T')[0] : "2026-01-01",
+                    status: exam.is_active ? "Active" : "Draft",
+                    description: exam.description || "",
+                    totalMarks: exam.total_marks || 100,
+                    passingScore: exam.pass_percentage || 60,
+                  };
+                });
+              }
+            } catch (err) {
+              console.error(`Error fetching exams for course ${course.id}:`, err);
+            }
+
+            return {
+              id: course.id,
+              name: course.name,
+              availableExams: mappedExams.length,
+              totalExams: mappedExams.length,
+              activeExams: mappedExams.filter(e => e.status === 'Active').length,
+              totalStudents: mappedExams.reduce((acc, curr) => acc + curr.enrolled, 0),
+              exams: mappedExams,
+            };
+          })
+        );
 
         setCourses(updatedCourses);
       } catch (error) {
@@ -151,7 +140,7 @@ const ExamsPage: React.FC = () => {
       }
     };
 
-    fetchExams();
+    fetchCoursesAndExams();
   }, []);
 
   const summary = useMemo(() => {

@@ -395,72 +395,31 @@ const CodingPage: React.FC = () => {
       pass_percentage: Number(form.passingScore) || 100,
     };
 
-    // Define API endpoints for all three course types
-    const apiEndpoints = [
-      {
-        name: 'Coding',
-        url: `${API_BASE_URL}/ind/coding/admin/exams`,
-        body: { ...baseRequestBody, exam_type: 'coding' }
-      },
-      {
-        name: 'Aptitude (MCQ)',
-        url: 'https://api.devtalent.securxperts.com:8000/admin/exams',
-        body: { ...baseRequestBody, exam_type: 'mcq', category: 'aptitude' }
-      },
-      {
-        name: 'Technical',
-        url: 'https://api.devtalent.securxperts.com:8000/admin/exams',
-        body: { ...baseRequestBody, exam_type: 'technical', category: 'technical' }
-      }
-    ];
-
-    // Track results
-    const results: { name: string; success: boolean; error?: string }[] = [];
+    // Only publish the Coding exam from this page
+    const results: { name: string; success: boolean; error?: string; data?: any }[] = [];
 
     try {
-      // Make all API calls in parallel without blocking UI
-      const promises = apiEndpoints.map(async (endpoint) => {
-        try {
-          console.log(`Sending ${endpoint.name} exam creation request:`, endpoint.body);
+      const codingBody = { ...baseRequestBody, exam_type: 'coding' };
+      console.log('Sending Coding exam creation request:', codingBody);
 
-          const response = await fetch(endpoint.url, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(endpoint.body),
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`${endpoint.name} exam creation failed:`, errorText);
-            return { name: endpoint.name, success: false, error: `Server error: ${response.status}` };
-          }
-
-          const examData = await response.json();
-          console.log(`${endpoint.name} exam created successfully:`, examData);
-          return { name: endpoint.name, success: true, data: examData };
-        } catch (error) {
-          console.error(`Error creating ${endpoint.name} exam:`, error);
-          return {
-            name: endpoint.name,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          };
-        }
+      const response = await fetch(`${API_BASE_URL}/ind/coding/admin/exams`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(codingBody),
       });
 
-      // Wait for all API calls to complete
-      const apiResults = await Promise.all(promises);
-      results.push(...apiResults);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Coding exam creation failed:', errorText);
+        results.push({ name: 'Coding', success: false, error: `Server error: ${response.status}` });
+      } else {
+        const examData = await response.json();
+        console.log('Coding exam created successfully:', examData);
+        results.push({ name: 'Coding', success: true, data: examData });
+      }
 
-      // Count successful and failed attempts
       const successful = results.filter(r => r.success);
       const failed = results.filter(r => !r.success);
-
-      // Update loading message with results
-      loadingMessage.textContent = `Published: ${successful.length}/${results.length} course types successful`;
-      loadingMessage.style.background = failed.length === 0 ? '#10b981' : '#f59e0b';
-
-      // Show detailed results
       setTimeout(() => {
         const successMessage = successful.map(r => r.name).join(', ');
         const failedMessage = failed.map(r => `${r.name}: ${r.error}`).join(', ');
@@ -757,7 +716,6 @@ const CodingPage: React.FC = () => {
               isActive={form.isActive}
               onDateChange={handleDateChange}
               onActiveChange={(value) => setForm(prev => ({ ...prev, isActive: value }))}
-              onSave={handlePublishExam}
               formErrors={formErrors}
             />
 

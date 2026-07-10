@@ -16,7 +16,6 @@ interface ProfileData {
   phone: string;
   role: string;
   location: string;
-  bio: string;
 }
 
 interface ValidationError {
@@ -116,11 +115,6 @@ const PersonalInfo = ({ initialData, onUpdate, onEditingChange }: PersonalInfoPr
           return "Location must be less than 100 characters";
         return null;
 
-      case "bio":
-        if (value.trim() && value.trim().length > 500)
-          return "Bio must be less than 500 characters";
-        return null;
-
       default:
         return null;
     }
@@ -145,7 +139,6 @@ const PersonalInfo = ({ initialData, onUpdate, onEditingChange }: PersonalInfoPr
 
     const optionalFields: (keyof ProfileData)[] = [
       "phone",
-      "bio",
     ];
 
     optionalFields.forEach((field) => {
@@ -333,34 +326,6 @@ const PersonalInfo = ({ initialData, onUpdate, onEditingChange }: PersonalInfoPr
             </p>
           )}
         </div>
-      </div>
-
-      <div>
-        <label className="mb-2 block text-[12px] xs:text-[13px] font-medium text-slate-700">
-          Bio
-        </label>
-        <textarea
-          rows={4}
-          value={isEditing ? tempData.bio : profileData.bio}
-          onChange={(e) => isEditing && handleChange("bio", e.target.value)}
-          placeholder={isEditing ? "Tell us about yourself..." : "No bio added"}
-          className={`w-full rounded-xl border px-3 xs:px-4 py-2 xs:py-3 outline-none text-[12px] xs:text-[14px] resize-none ${isEditing && getFieldError("bio")
-            ? "border-red-300 bg-red-50 focus:border-red-500"
-            : "border-[#d6d9e0] bg-[#fbfbfd] focus:border-[#7c3aed]"
-            }`}
-          readOnly={!isEditing}
-        />
-        {isEditing && getFieldError("bio") && (
-          <p className="mt-1 text-red-500 text-[11px] xs:text-[12px] flex items-center gap-1">
-            <HiOutlineExclamationCircle className="text-[12px] xs:text-[13px]" />
-            {getFieldError("bio")}
-          </p>
-        )}
-        {isEditing && (
-          <p className="mt-1 text-slate-500 text-[10px] xs:text-[11px]">
-            {tempData.bio.length}/500 characters
-          </p>
-        )}
       </div>
     </div>
   );

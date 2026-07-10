@@ -70,7 +70,7 @@ const PlansTable: React.FC<Props> = ({ plans, onEdit, onDelete, onUpdate }) => {
         is_active: editForm.is_active !== undefined ? editForm.is_active : true,
       };
 
-      const response = await fetch(`${BASE_URL || 'http://192.168.0.103:8000'}/admin/catalog/plans/${id}`, {
+      const response = await fetch(`${BASE_URL || 'http://192.168.0.100:8000'}/admin/catalog/plans/${id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(requestBody),

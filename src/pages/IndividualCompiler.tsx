@@ -1,20 +1,115 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { API_BASE_URL } from "@/pages/Services/api/api";
 
 const IndividualCompiler: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const examState = (location.state as any) || {};
+    const examData = examState.examData || {};
+
     const [code, setCode] = useState(
-        "def mergklists(lists):\n    # write your solution here",
+        "def solution():\n    # write your solution here",
     );
-    const [input, setInput] = useState("10 25 15");
+    const [input, setInput] = useState("");
     const [output, setOutput] = useState<string>("");
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const [activeIdx, setActiveIdx] = useState(0);
-    const questions = [1, 2, 3, 4];
+    
+    // Ensure questions is an array even if it's missing
+    const [questions, setQuestions] = useState<any[]>(
+        examData.questions && examData.questions.length > 0
+            ? examData.questions
+            : [
+                {
+                    title: "Reverse String",
+                    problem_description: "Lorem Ipsum...",
+                    difficulty: "Hard",
+                    total_marks: 10
+                }
+              ]
+    );
 
-    const [timeLeft, setTimeLeft] = useState(3600);
-    const candidateId = "CP-2024-9XBR";
+    const [timeLeft, setTimeLeft] = useState((examData.duration || 60) * 60);
+    const examTitle = examData.title || "STM CODING 1";
+    const [candidateId, setCandidateId] = useState("Loading...");
+    const [studentData, setStudentData] = useState<any>(null);
+
+    const [languages, setLanguages] = useState<any[]>([]);
+    const [selectedLanguage, setSelectedLanguage] = useState<string>("python");
+
+    useEffect(() => {
+        const fetchStudentDetails = async () => {
+            try {
+                const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+                if (!token) {
+                    setCandidateId("CP-2024-9XBR"); // fallback if no token
+                    return;
+                }
+                
+                let studentId = "";
+                try {
+                    const payload = JSON.parse(atob(token.split(".")[1]));
+                    studentId = String(payload.user_id || payload.id || payload.candidate_id || payload.sub || "");
+                } catch (e) {
+                    console.error("Error decoding token", e);
+                }
+                
+                if (studentId) {
+                    const response = await fetch(`${API_BASE_URL}/student/students/${studentId}`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const student = Array.isArray(data) ? data[0] : data;
+                        setStudentData(student);
+                        
+                        if (student?.id) {
+                            setCandidateId(String(student.id));
+                        } else if (student?.full_name) {
+                            setCandidateId(student.full_name);
+                        } else {
+                            setCandidateId("CP-2026-XXXX");
+                        }
+                    } else {
+                        setCandidateId("CP-2026-XXXX");
+                    }
+                } else {
+                    setCandidateId("CP-2024-9XBR"); // fallback if studentId not found
+                }
+            } catch (error) {
+                console.error("Error fetching student details:", error);
+                setCandidateId("CP-2026-XXXX");
+            }
+        };
+
+        fetchStudentDetails();
+    }, []);
+
+    // Fetch languages
+    useEffect(() => {
+        const fetchLanguages = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/languages/`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setLanguages(data);
+                    if (data.length > 0) {
+                        setSelectedLanguage(data[0].lang_name);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching languages:", error);
+            }
+        };
+        fetchLanguages();
+    }, []);
 
     const videoRef = useRef<HTMLVideoElement>(null);
     const [cameraError, setCameraError] = useState(false);
@@ -66,30 +161,134 @@ const IndividualCompiler: React.FC = () => {
         setInput("");
     };
 
-    const handleRunCode = () => {
+    const handleRunCode = async () => {
         setOutput("Running code...\n");
 
-        // Fake execution
-        setTimeout(() => {
-            setOutput((prev) => prev + "Output: Code executed successfully ✔\n");
-        }, 1000);
+        try {
+            const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+            const courseId = parseInt(localStorage.getItem("selectedCourseId") || "0") || 0;
+            const currentQuestion = questions[activeIdx];
+            const questionId = currentQuestion?.question_id || currentQuestion?.id || 0;
+
+            const response = await fetch(`${API_BASE_URL}/ind/coding/student/questions/run`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    course_id: courseId,
+                    question_id: questionId,
+                    language: selectedLanguage,
+                    source_code: code,
+                    user_input: input
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // Depending on the exact response structure, you might need to adjust this. 
+                // We're handling both primitive string responses and JSON objects with an "output" field.
+                const runOutput = typeof data === 'string' ? data : (data.output || JSON.stringify(data, null, 2));
+                setOutput((prev) => prev + `\nOutput:\n${runOutput}\n`);
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                setOutput((prev) => prev + `\nError running code: ${errData.detail || response.statusText}\n`);
+            }
+        } catch (error) {
+            console.error("Run code error:", error);
+            setOutput((prev) => prev + "\nFailed to run code. Please try again.\n");
+        }
     };
 
-    const handleRunTestCases = () => {
+    const handleRunTestCases = async () => {
         setOutput("Running test cases...\n");
 
-        setTimeout(() => {
-            setOutput(
-                (prev) =>
-                    prev +
-                    "Test Case 1: Passed ✔\nTest Case 2: Passed ✔\nAll test cases passed! 🎉\n",
-            );
-        }, 1200);
+        try {
+            const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+            const examId = examState?.examData?.examId || location.state?.examId;
+            const courseId = parseInt(localStorage.getItem("selectedCourseId") || "0") || 0;
+            
+            if (!examId) {
+                setOutput((prev) => prev + "\nError: Exam ID not found.\n");
+                return;
+            }
+
+            const submissions = questions.map((q, idx) => ({
+                question_id: q.question_id || q.id,
+                code: idx === activeIdx ? code : ""
+            }));
+
+            const response = await fetch(`${API_BASE_URL}/ind/coding/student/exams/${examId}/test-cases`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    course_id: courseId,
+                    exam_id: examId,
+                    language: selectedLanguage,
+                    submissions: submissions
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const runOutput = typeof data === 'string' ? data : (data.output || JSON.stringify(data, null, 2));
+                setOutput((prev) => prev + `\nTest Cases Output:\n${runOutput}\n`);
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                setOutput((prev) => prev + `\nError running test cases: ${errData.detail || response.statusText}\n`);
+            }
+        } catch (error) {
+            console.error("Run test cases error:", error);
+            setOutput((prev) => prev + "\nFailed to run test cases. Please try again.\n");
+        }
     };
 
-    const handleSubmit = () => {
-        setOutput((prev) => prev + "\nExam Submitted Successfully 🎉\n");
-        setShowSuccessModal(true);
+    const handleSubmit = async () => {
+        try {
+            const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+            const examId = examState?.examData?.examId || location.state?.examId;
+            const courseId = parseInt(localStorage.getItem("selectedCourseId") || "0") || 0;
+            
+            if (!examId) {
+                setOutput((prev) => prev + "\nError: Exam ID not found.\n");
+                return;
+            }
+
+            // We submit the current code for the active question. 
+            // If you want to track code per question, you can update the code state to be an object/array.
+            const submissions = questions.map((q, idx) => ({
+                question_id: q.question_id || q.id,
+                code: idx === activeIdx ? code : ""
+            }));
+
+            const response = await fetch(`${API_BASE_URL}/ind/coding/student/exams/${examId}/submit`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    course_id: courseId,
+                    language: selectedLanguage,
+                    submissions: submissions
+                })
+            });
+
+            if (response.ok) {
+                setOutput((prev) => prev + "\nExam Submitted Successfully 🎉\n");
+                setShowSuccessModal(true);
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                setOutput((prev) => prev + `\nError submitting exam: ${errData.detail || response.statusText}\n`);
+            }
+        } catch (error) {
+            console.error("Submit error:", error);
+            setOutput((prev) => prev + "\nFailed to submit exam. Please try again.\n");
+        }
     };
 
     // ====================================================
@@ -100,7 +299,7 @@ const IndividualCompiler: React.FC = () => {
             <div className="h-[90px] bg-white shadow-sm border-b px-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <img src="src/assests/Devlogo.png" className="h-14" />
-                    <h1 className="text-xl font-bold">STM CODING 1</h1>
+                    <h1 className="text-xl font-bold">{examTitle}</h1>
                 </div>
 
                 <div className="hidden md:flex flex-1 items-center justify-center px-8">
@@ -177,47 +376,63 @@ const IndividualCompiler: React.FC = () => {
                 {/* QUESTION PANEL */}
                 <div className="w-1/2 p-6 overflow-y-auto">
                     <div className="bg-white p-6 rounded-xl shadow">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-lg font-bold">Reverse String</h2>
-                            <div className="flex gap-2">
-                                <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs">
-                                    Hard
-                                </span>
-                                <span className="px-3 py-1 bg-gray-100 text-xs font-bold">
-                                    15 PTS
-                                </span>
-                            </div>
-                        </div>
+                        {questions.length > 0 && (
+                            <>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-lg font-bold">{questions[activeIdx]?.title || "Reverse String"}</h2>
+                                    <div className="flex gap-2">
+                                        <span className={`px-3 py-1 rounded-full text-xs capitalize ${
+                                            questions[activeIdx]?.difficulty === 'easy' ? 'bg-green-100 text-green-600' :
+                                            questions[activeIdx]?.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                                            'bg-red-100 text-red-600'
+                                        }`}>
+                                            {questions[activeIdx]?.difficulty || "Hard"}
+                                        </span>
+                                        <span className="px-3 py-1 bg-gray-100 text-xs font-bold">
+                                            {questions[activeIdx]?.total_marks || questions[activeIdx]?.marks || "10"} PTS
+                                        </span>
+                                    </div>
+                                </div>
 
-                        <h3 className="font-semibold mb-2">Problem Statement</h3>
-                        <p className="text-gray-600 mb-4">
-                            Lorem Ipsum Lorem Ipsum Lorem Ipsum
-                        </p>
+                                <h3 className="font-semibold mb-2">Problem Statement</h3>
+                                <p className="text-gray-600 mb-4 whitespace-pre-wrap">
+                                    {questions[activeIdx]?.problem_description || "Lorem Ipsum..."}
+                                </p>
 
-                        <h3 className="font-semibold mb-2">Description</h3>
-                        <p className="text-gray-600 mb-4">
-                            Lorem Ipsum Lorem Ipsum Lorem Ipsum
-                        </p>
+                                <h3 className="font-semibold mb-2">Constraints</h3>
+                                <p className="text-gray-600 mb-4 whitespace-pre-wrap">
+                                    {questions[activeIdx]?.constraints || "Not specified"}
+                                </p>
 
-                        <div className="grid grid-cols-2 gap-4 mt-6">
-                            <div>
-                                <h4 className="font-semibold mb-2">Sample Input</h4>
-                                <div className="bg-gray-100 p-3 rounded">10, 25, 15</div>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold mb-2">Expected Output</h4>
-                                <div className="bg-gray-100 p-3 rounded">25</div>
-                            </div>
-                        </div>
+                                <div className="grid grid-cols-2 gap-4 mt-6">
+                                    <div>
+                                        <h4 className="font-semibold mb-2">Sample Input</h4>
+                                        <div className="bg-gray-100 p-3 rounded whitespace-pre-wrap font-mono text-sm">{questions[activeIdx]?.input_format || "N/A"}</div>
+                                    </div>
+                                    <div>
+                                        <h4 className="font-semibold mb-2">Expected Output</h4>
+                                        <div className="bg-gray-100 p-3 rounded whitespace-pre-wrap font-mono text-sm">{questions[activeIdx]?.output_format || "N/A"}</div>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
                 {/* RIGHT PANEL */}
                 <div className="w-1/2 flex flex-col">
                     <div className="bg-white p-3 border-b">
-                        <select className="border px-3 py-1 rounded">
-                            <option>Python 3.10</option>
-                            <option>Java</option>
+                        <select 
+                            className="border px-3 py-1 rounded"
+                            value={selectedLanguage}
+                            onChange={(e) => setSelectedLanguage(e.target.value)}
+                        >
+                            {languages.map((lang) => (
+                                <option key={lang.lang_id} value={lang.lang_name}>
+                                    {lang.lang_name}
+                                </option>
+                            ))}
+                            {languages.length === 0 && <option>Loading...</option>}
                         </select>
                     </div>
 

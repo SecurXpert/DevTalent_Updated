@@ -86,7 +86,7 @@ const Report: React.FC = () => {
   }, [search, minPassRate, tableData]);
 
   return (
-    <div className="min-h-screen bg-[#f5f3ff] px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 md:py-5 lg:py-6">
+    <div className="min-h-screen bg-[#f5f3ff] px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 py-3 sm:py-4 md:py-5 lg:py-6" id="report-container">
       <div className="max-w-full sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:max-w-[1400px] mx-auto">
         <ReportHeader />
         <ReportStats apiData={apiData} />

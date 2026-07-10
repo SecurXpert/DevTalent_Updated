@@ -8,6 +8,7 @@ import { CoursePerformance } from "./StudentDashboardComponents/CoursePerformanc
 import { QuickLinks } from "./StudentDashboardComponents/QuickLinks";
 import { PlanSelector } from "./StudentDashboardComponents/PlanSelector";
 import { UpgradeBanner } from "./StudentDashboardComponents/UpgradeBanner";
+import { ActiveSubscriptionCard } from "./StudentDashboardComponents/ActiveSubscriptionCard";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
@@ -225,6 +226,7 @@ const StudentDashboard = () => {
 
         {/* RIGHT COLUMN */}
         <div className="lg:col-span-1 space-y-6 mt-3">
+
           <QuickLinks course={course} subscription={subscription} />
           <PlanSelector
             subscription={subscription}
@@ -232,6 +234,7 @@ const StudentDashboard = () => {
             allSubscriptions={allSubscriptions}
             setCourse={setCourse}
           />
+          <ActiveSubscriptionCard subscription={subscription} />
           <UpgradeBanner />
         </div>
       </div>

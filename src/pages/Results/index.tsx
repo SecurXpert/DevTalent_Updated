@@ -1,6 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { TrendingUp, Award, AlertCircle, Download } from "lucide-react";
 import { FiBarChart2 } from "react-icons/fi";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import ResultCharts from "./ResultCharts";
 import ResultsFilterBar from "./ResultsFilterBar";
 import ResultsTable from "./ResultsTable";
@@ -15,6 +18,33 @@ const Result: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("All Courses");
   const [selectedStatus, setSelectedStatus] = useState("All Status");
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  const handleExportReport = async () => {
+    if (!pageRef.current) return;
+    toast.info("Generating PDF report, please wait...");
+    
+    try {
+      const canvas = await html2canvas(pageRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#f3f4f6", // tailwind bg-gray-100
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdfWidth = 210;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      const pdf = new jsPDF("p", "mm", [pdfWidth, pdfHeight]);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("Results_Report.pdf");
+      toast.success("Report exported successfully!");
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to export report. Please try again.");
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -151,7 +181,7 @@ const Result: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100 min-h-screen" ref={pageRef}>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
@@ -163,7 +193,11 @@ const Result: React.FC = () => {
           </p>
         </div>
 
-        <button className="mt-4 md:mt-0 flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg shadow hover:bg-purple-700 transition">
+        <button 
+          onClick={handleExportReport}
+          data-html2canvas-ignore="true"
+          className="mt-4 md:mt-0 flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg shadow hover:bg-purple-700 transition"
+        >
           <Download size={16} />
           Export Report
         </button>
@@ -196,15 +230,17 @@ const Result: React.FC = () => {
       <ResultCharts results={filteredResults} />
 
       {/* Filter Bar */}
-      <ResultsFilterBar
+      <div data-html2canvas-ignore="true">
+        <ResultsFilterBar
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         selectedCourse={selectedCourse}
         onCourseChange={setSelectedCourse}
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
-        courses={uniqueCourses}
-      />
+          courses={uniqueCourses}
+        />
+      </div>
 
       {/* Results Table */}
       <ResultsTable results={filteredResults} />

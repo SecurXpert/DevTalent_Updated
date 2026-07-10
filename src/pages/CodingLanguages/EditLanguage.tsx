@@ -28,7 +28,7 @@ export default function EditLanguage() {
           navigate('/adminlogin');
           return;
         }
-        const base = API_BASE_URL || 'http://192.168.0.103:8000';
+        const base = API_BASE_URL || 'http://192.168.0.100:8000';
         const res = await fetch(`${base}/languages/${id}`, { headers: { Authorization: token } });
         if (res.ok) {
           const data = await res.json();
@@ -62,7 +62,7 @@ export default function EditLanguage() {
         navigate('/adminlogin');
         return;
       }
-      const base = API_BASE_URL || 'http://192.168.0.103:8000';
+      const base = API_BASE_URL || 'http://192.168.0.100:8000';
       const res = await fetch(`${base}/languages/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: token },
@@ -92,7 +92,7 @@ export default function EditLanguage() {
         navigate('/adminlogin');
         return;
       }
-      const base = API_BASE_URL || 'http://192.168.0.103:8000';
+      const base = API_BASE_URL || 'http://192.168.0.100:8000';
       const res = await fetch(`${base}/languages/${id}`, { method: 'DELETE', headers: { Authorization: token } });
       if (res.ok) {
         toast.success('Language deleted');

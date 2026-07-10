@@ -1,7 +1,7 @@
 // src/lib/api.ts
 // Centralized API helper for student data
 
-export const BASE_URL = "http://192.168.0.103:8000";
+export const BASE_URL = "http://192.168.0.100:8000";
 
 /**
  * Student list item as returned by GET /student/students

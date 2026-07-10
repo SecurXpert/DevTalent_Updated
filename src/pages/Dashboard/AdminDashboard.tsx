@@ -1,71 +1,18 @@
-import React, { useEffect, useState } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import {
-  Users,
-  FileText,
-  CheckCircle2,
-  DollarSign,
-  Award,
-  TrendingUp,
-  Download,
-  Filter,
-  Clock,
-  Calendar,
-} from "lucide-react";
-import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+import React, { useEffect, useState, useRef } from "react";
+import { Download, Filter, Users, FileText, CheckCircle2, DollarSign, AlertCircle } from "lucide-react";
+import { API_BASE_URL } from "@/pages/Services/api/api";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import FilterModal from "../../components/filtermodal";
 import CourseDistribution from "./CourseDistribution";
 import ExamParticipation from "./ExamParticipation";
-
-type StatCard = {
-  title: string;
-  value: string;
-  change: string;
-  positive?: boolean;
-  icon: React.ElementType;
-  color: string;
-};
-
-type Registration = {
-  id: number;
-  name: string;
-  course: string;
-  date: string;
-  initials: string;
-};
-
-type ExamActivity = {
-  id: number;
-  title: string;
-  enrolled: number;
-  completed: number;
-  avg: string;
-};
-
-type UpcomingExam = {
-  id: number;
-  title: string;
-  date: string;
-  time: string;
-  students: number;
-  status: string;
-};
-
-type DashboardResponse = {
-  stats: StatCard[];
-  registrations: Registration[];
-  examActivity: ExamActivity[];
-  upcomingExams: UpcomingExam[];
-};
+import { DashboardResponse } from "./AdminDashboardComponents/types";
+import { Card } from "./AdminDashboardComponents/SharedUI";
+import { StatCardsGrid } from "./AdminDashboardComponents/StatCardsGrid";
+import { PerformanceOverview } from "./AdminDashboardComponents/PerformanceOverview";
+import { StudentPerformanceMetrics } from "./AdminDashboardComponents/StudentPerformanceMetrics";
+import { RecentActivityOverview } from "./AdminDashboardComponents/RecentActivityOverview";
 
 const validateDashboardResponse = (data: any): data is DashboardResponse => {
   return (
@@ -213,88 +160,45 @@ const mockDashboardApi = async (): Promise<DashboardResponse> => {
   });
 };
 
-function Card({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`rounded-2xl border-2 border-gray-200 bg-white  ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
 
-function SectionTitle({
-  title,
-  subtitle,
-  action,
-}: {
-  title: string;
-  subtitle?: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-      <div>
-        <h2 className="text-[14px] sm:text-[15px] laptop:text-[17px] font-bold text-[#1c2434]">
-          {title}
-        </h2>
-        {subtitle && (
-          <p className="mt-1 text-[11px] sm:text-[12px] laptop:text-[12px] text-[#5d677a]">
-            {subtitle}
-          </p>
-        )}
-      </div>
-      {action && <div className="flex-shrink-0">{action}</div>}
-    </div>
-  );
-}
-
-function MiniProgress({
-  label,
-  students,
-  percent,
-  color,
-  width,
-}: {
-  label: string;
-  students: string;
-  percent: string;
-  color: string;
-  width: string;
-}) {
-  return (
-    <div className="mb-3 sm:mb-4 laptop:mb-5">
-      <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3">
-        <span className="text-[12px] sm:text-[14px] laptop:text-[16px] font-medium text-[10px]">
-          {label}
-        </span>
-        <div className="text-right">
-          <span className="mr-2 text-[11px] sm:text-[13px] laptop:text-[15px] text-[12px]">
-            {students}
-          </span>
-          <span className="text-[12px] sm:text-[14px] laptop:text-[16px] font-semibold text-[#1c2434]">
-            {percent}
-          </span>
-        </div>
-      </div>
-      <div className="h-2 sm:h-3 w-full overflow-hidden rounded-full bg-[#e5e7eb]">
-        <div className={`h-full rounded-full ${color} ${width}`}></div>
-      </div>
-    </div>
-  );
-}
 
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [apiErrors, setApiErrors] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(true);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const handleExportReport = async () => {
+    if (!dashboardRef.current) return;
+    toast.info("Generating PDF report, please wait...");
+    
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#f5f3ff",
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      
+      const pdfWidth = 210; // A4 width in mm
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      // Create a PDF with custom dimensions to perfectly fit the entire dashboard on one continuous page
+      const pdf = new jsPDF("p", "mm", [pdfWidth, pdfHeight]);
+      
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      
+      pdf.save("Admin_Dashboard_Report.pdf");
+      toast.success("Report exported successfully!");
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to export report. Please try again.");
+    }
+  };
 
   const performanceData = [
     { month: "Sep", avgScore: 72, passRate: 78 },
@@ -317,6 +221,8 @@ export default function AdminDashboard() {
         if (!validateDashboardResponse(response)) {
           throw new Error("Invalid dashboard response");
         }
+        
+        const newApiErrors: string[] = [];
 
         // Fetch completed exams count
         try {
@@ -328,7 +234,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const countRes = await fetch('http://192.168.0.103:8000/ind/coding/admin/today/completed-count', {
+          const countRes = await fetch(`${API_BASE_URL}/ind/coding/admin/today/completed-count`, {
             headers,
           });
 
@@ -365,7 +271,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const studentsRes = await fetch('http://192.168.0.103:8000/student/students', {
+          const studentsRes = await fetch(`${API_BASE_URL}/student/students`, {
             headers,
           });
 
@@ -425,9 +331,152 @@ export default function AdminDashboard() {
 
               response.registrations = recentRegistrations;
             }
+          } else {
+            newApiErrors.push(`Students API failed: ${studentsRes.status}`);
           }
-        } catch (e) {
-          console.error("Error fetching registered students count:", e);
+        } catch (e: any) {
+          newApiErrors.push(`Students fetch error: ${e.message}`);
+        }
+
+        // Fetch recent exam activity
+        try {
+          const adminToken = localStorage.getItem('adminToken');
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+          if (adminToken) {
+            headers['Authorization'] = `Bearer ${adminToken}`;
+          }
+
+          const examResultsRes = await fetch(`${API_BASE_URL}/student/scorecard/admin/exam-results?limit=200`, {
+            headers,
+          });
+
+          if (examResultsRes.ok) {
+            const resultsData = await examResultsRes.json();
+            
+            if (resultsData && Array.isArray(resultsData.items)) {
+              // Group by course_name + exam_kind
+              const examStats = new Map<string, { title: string, completed: number, totalPercentage: number }>();
+              
+              for (const item of resultsData.items) {
+                const courseName = item.course_name || "Unknown Course";
+                const kind = item.exam_kind ? item.exam_kind.toUpperCase() : "EXAM";
+                const key = `${courseName} (${kind})`;
+                
+                if (!examStats.has(key)) {
+                  examStats.set(key, {
+                    title: key,
+                    completed: 0,
+                    totalPercentage: 0,
+                  });
+                }
+                const stats = examStats.get(key)!;
+                stats.completed += 1;
+                stats.totalPercentage += (item.percentage || 0);
+              }
+
+              const recentActivity = Array.from(examStats.values())
+                .sort((a, b) => b.completed - a.completed) // sort by most active
+                .slice(0, 3) // show top 3
+                .map((stats, idx) => ({
+                  id: idx + 1,
+                  title: stats.title,
+                  enrolled: stats.completed, // We don't have enrolled data, so mock it as completed
+                  completed: stats.completed,
+                  avg: `${Math.round(stats.totalPercentage / stats.completed)}%`,
+                }));
+
+              if (recentActivity.length > 0) {
+                response.examActivity = recentActivity;
+              }
+            }
+          } else {
+            newApiErrors.push(`Exam Results API failed: ${examResultsRes.status}`);
+          }
+        } catch (e: any) {
+          newApiErrors.push(`Exam Results fetch error: ${e.message}`);
+        }
+
+        // Fetch active examinations count (mapped exams summary)
+        try {
+          const adminToken = localStorage.getItem('adminToken');
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+          if (adminToken) {
+            headers['Authorization'] = `Bearer ${adminToken}`;
+          }
+
+          const mappedExamsRes = await fetch(`${API_BASE_URL}/ind/coding/admin/mapped-exams/summary`, {
+            headers,
+          });
+
+          if (mappedExamsRes.ok) {
+            const mappedExamsData = await mappedExamsRes.json();
+
+            const activeCardIndex = response.stats.findIndex(s => s.title === "Active Examinations");
+            if (activeCardIndex !== -1) {
+              const total = mappedExamsData.total_mapped_exams ?? 0;
+              const mcq = mappedExamsData.total_mcq_mapped_exams ?? 0;
+              const coding = mappedExamsData.total_coding_mapped_exams ?? 0;
+
+              response.stats[activeCardIndex].value = String(total);
+              response.stats[activeCardIndex].change = "Total Active";
+              response.stats[activeCardIndex].extraStats = [
+                { label: "MCQ", value: String(mcq) },
+                { label: "Coding", value: String(coding) }
+              ];
+            }
+          } else {
+            const errText = await mappedExamsRes.text();
+            newApiErrors.push(`Mapped Exams API failed: ${mappedExamsRes.status} ${errText}`);
+            console.error("Mapped Exams API failed:", mappedExamsRes.status, errText);
+          }
+        } catch (e: any) {
+          newApiErrors.push(`Mapped Exams fetch error: ${e.message}`);
+          console.error("Error fetching mapped exams summary:", e);
+        }
+
+        // Fetch subscriptions data for Total Revenue
+        try {
+          const adminToken = localStorage.getItem('adminToken');
+          const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+          };
+          if (adminToken) {
+            headers['Authorization'] = `Bearer ${adminToken}`;
+          }
+
+          const subsRes = await fetch(`${API_BASE_URL}/student/admin/subscriptions`, {
+            headers,
+          });
+
+          if (subsRes.ok) {
+            const subsData = await subsRes.json();
+            const revenueCardIndex = response.stats.findIndex(s => s.title === "Total Revenue");
+            if (revenueCardIndex !== -1 && subsData.summary && subsData.summary.total_revenue !== undefined) {
+              const formattedRevenue = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              }).format(subsData.summary.total_revenue);
+
+              response.stats[revenueCardIndex].value = formattedRevenue;
+            }
+          } else {
+            const errText = await subsRes.text();
+            newApiErrors.push(`Subscriptions API failed: ${subsRes.status} ${errText}`);
+            console.error("Subscriptions API failed:", subsRes.status, errText);
+          }
+        } catch (e: any) {
+          newApiErrors.push(`Subscriptions fetch error: ${e.message}`);
+          console.error("Error fetching subscriptions for revenue:", e);
+        }
+
+        if (newApiErrors.length > 0) {
+          setApiErrors(newApiErrors);
         }
 
         setData(response);
@@ -464,435 +513,78 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="bg-[#f5f3ff]">
+    <div className="bg-[#f5f3ff]" ref={dashboardRef}>
       <div className="flex flex-col">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="mb-4 sm:mb-6 laptop:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="font-semibold leading-tight text-[#182033] text-[29px]">
+            <h1 className="text-[20px] sm:text-[24px] laptop:text-[28px] font-bold text-[#1c2434]">
               Dashboard Overview
             </h1>
-            <p className="mt-1 text-[10px] sm:text-[11px] laptop:text-[13px] xl:text-[14px] text-[#5d677a]">
+            <p className="mt-1 text-[13px] sm:text-[14px] laptop:text-[15px] text-[#5d677a]">
               Welcome back! Here's what's happening with your platform.
             </p>
           </div>
-
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2 sm:gap-3" data-html2canvas-ignore="true">
             <button
               onClick={() => setShowFilters((prev) => !prev)}
-              className="flex h-[30px] items-center gap-1 border-2 border-gray-100 rounded-[9px] bg-white px-2 text-[11px] font-medium text-black shadow sm:h-[32px] sm:px-3"
+              className="flex items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-3 sm:px-4 py-2 text-[13px] sm:text-[14px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
             >
-              <Filter size={15} />
-              Filters
+              <Filter size={18} className="text-gray-500" />
+              <span className="hidden sm:inline">Filters</span>
             </button>
-
-            <button className="flex h-[30px] items-center gap-2 rounded-[8px] bg-gradient-to-r from-[#6d28d9] to-[#9333ea] px-1 text-[11px] font-medium text-white shadow-[0_8px_20px_rgba(124,58,237,0.28)] sm:h-[30px] sm:px-2">
-              <Download size={15} />
-              Export Report
+            <button 
+              onClick={handleExportReport}
+              className="flex items-center gap-2 rounded-xl bg-[#4f46e5] px-3 sm:px-4 py-2 text-[13px] sm:text-[14px] font-medium text-white hover:bg-[#4338ca] transition-all shadow-sm shadow-[#4f46e5]/30"
+            >
+              <Download size={18} />
+              <span className="hidden sm:inline">Export Report</span>
             </button>
           </div>
         </div>
 
-        <FilterModal isOpen={showFilters} />
+        {apiErrors.length > 0 && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm">
+            <h3 className="flex items-center gap-2 text-red-800 font-semibold mb-2">
+              <AlertCircle size={18} />
+              Live Data Sync Issues
+            </h3>
+            <ul className="list-disc pl-5 text-sm text-red-600 space-y-1">
+              {apiErrors.map((err, i) => (
+                <li key={i}>{err}</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-xs text-red-500">
+              Because the live fetch failed, the dashboard is currently displaying static fallback data.
+            </p>
+          </div>
+        )}
+
+        <div data-html2canvas-ignore="true">
+          <FilterModal isOpen={showFilters} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-3 laptop:gap-3 xl:gap-4 mt-5 laptop:grid-cols-2 xl:grid-cols-4">
-        {data.stats.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <Card key={index} className="p-1 sm:p-3 laptop:p-3 xl:p-2">
-              <div className="flex items-start justify-between gap-1 sm:gap-2 laptop:gap-1 xl:gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className=" py-1 p-2 max-w-[100px] sm:max-w-[150px] laptop:max-w-[150px] xl:max-w-[170px] font-Inter-medium leading-[1.35] text-[14px]">
-                    {item.title}
-                  </p>
-                  <h3 className=" p-1 mt-1 sm:mt-3 laptop:mt-1 text-[10px] sm:text-[15px] laptop:text-[18px] gap-1 xl:text-[20px] font-bold leading-none text-[#172033]">
-                    {item.value}
-                  </h3>
-                  <p className="mt-2 sm:mt-3 laptop:mt-4 text-[16px] sm:text-[11px] laptop:text-[15px] gap-1 xl:text-[11px] font-medium text-[#09a64b] flex items-end">
-                    <TrendingUp size={20} /> {item.change}
-                  </p>
-                </div>
+      <StatCardsGrid stats={data.stats} />
 
-                <div
-                  className={`flex h-[24px] w-[24px] sm:h-[24px] sm:w-[28px] laptop:h-[40px] laptop:w-[40px] xl:h-[52px] xl:w-[52px] items-center justify-center rounded-lg sm:rounded-xl laptop:rounded-xl xl:rounded-2xl bg-gradient-to-br ${item.color} text-white shadow-lg flex-shrink-0`}
-                >
-                  <Icon size={20} />
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-
-      <div className="mt-3 sm:mt-4 laptop:mt-5 grid grid-cols-2 gap-3 sm:gap-4 laptop:grid-cols-2 xl:grid-cols-4">
-        <Card className="p-1 sm:p-2 laptop:p-3 xl:p-4">
-          <div className="mb-1 sm:mb-2 laptop:mb-3 flex items-center justify-between">
-            <div
-              className="flex h-6 w-6 sm:h-8 sm:w-8 laptop:h-10 laptop:w-10 items-center justify-center rounded-lg sm:rounded-xl laptop:rounded-xl text-white shadow-md"
-              style={{
-                background: "linear-gradient(135deg, #00C950 0%, #009966 100%)",
-              }}
-            >
-              <Award size={20} />
-            </div>
-            <span className="text-[10px] sm:text-[11px] laptop:text-[13px] font-semibold text-[#09a64b] flex items-center gap-1">
-              <TrendingUp size={12} /> 2.3%
-            </span>
-          </div>
-          <p className="font-Inter-regular text-[12px] sm:text-[10px] laptop:text-[14px] text-[12px]">
-            Pass Rate
-          </p>
-          <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            87.5%
-          </h3>
-        </Card>
-
-        <Card className="p-1 sm:p-2 laptop:p-3 xl:p-4">
-          <div className="mb-1 sm:mb-2 laptop:mb-3 flex items-center justify-between">
-            <div
-              className="flex h-6 w-6 sm:h-8 sm:w-8 laptop:h-10 laptop:w-10 items-center justify-center rounded-lg sm:rounded-xl laptop:rounded-xl text-white shadow-md"
-              style={{
-                background: "linear-gradient(135deg, #615FFF 0%, #9810FA 100%)",
-              }}
-            >
-              <TrendingUp size={20} />
-            </div>
-            <span className="text-[10px] sm:text-[11px] laptop:text-[13px] font-semibold text-[#4f46e5] flex items-center gap-1">
-              <TrendingUp size={12} /> 1.8%
-            </span>
-          </div>
-          <p className="  font-Inter-regular text-[12px] sm:text-[10px] laptop:text-[14px] text-[12px]">
-            Avg. Score
-          </p>
-          <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            81.2%
-          </h3>
-        </Card>
-
-        <Card className="p-1 sm:p-2 laptop:p-3 xl:p-4">
-          <div className="mb-1 sm:mb-2 laptop:mb-3 flex items-center justify-between">
-            <div
-              className="flex h-6 w-6 sm:h-8 sm:w-8 laptop:h-10 laptop:w-10 items-center justify-center rounded-lg sm:rounded-xl laptop:rounded-xl text-white shadow-md"
-              style={{
-                background: "linear-gradient(135deg, #2B7FFF 0%, #0092B8 100%)",
-              }}
-            >
-              <Users size={20} />
-            </div>
-            <span className="text-[10px] sm:text-[11px] laptop:text-[13px] font-semibold text-[#2563eb] flex items-center gap-1">
-              <TrendingUp size={12} /> 3.1%
-            </span>
-          </div>
-          <p className="font-Inter-regular text-[12px] sm:text-[10px] laptop:text-[14px] text-[12px]">
-            Participation
-          </p>
-          <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            92.3%
-          </h3>
-        </Card>
-
-        <Card className="p-1 sm:p-2 laptop:p-3 xl:p-4">
-          <div className="mb-1 sm:mb-2 laptop:mb-3 flex items-center justify-between">
-            <div
-              className="flex h-6 w-6 sm:h-8 sm:w-8 laptop:h-10 laptop:w-10 items-center justify-center rounded-lg sm:rounded-xl laptop:rounded-xl text-white shadow-md"
-              style={{
-                background: "linear-gradient(135deg, #AD46FF 0%, #E60076 100%)",
-              }}
-            >
-              <IoMdCheckmarkCircleOutline size={20} />
-            </div>
-            <span className="text-[10px] sm:text-[11px] laptop:text-[13px] font-semibold text-[#a21caf] flex items-center gap-1">
-              <TrendingUp size={12} /> 0.9%
-            </span>
-          </div>
-          <p className="font-Inter-regular text-[12px] sm:text-[10px] laptop:text-[14px] text-[12px]">
-            Completion Rate
-          </p>
-          <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            94.8%
-          </h3>
-        </Card>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-5 laptop:grid-cols-2 xl:grid-cols-[2fr_1fr]">
-        <Card className="p-2 sm:p-5 laptop:p-2 xl:p-6">
-          <SectionTitle
-            title="Student Registrations & Performance "
-            subtitle="Monthly trends with pass rate overlay"
-            action={
-              <TrendingUp
-                className="text-xl font-bold text-[#12b553]"
-                size={20}
-              />
-            }
-          />
-
-          <div className="w-full h-[250px] sm:h-[300px] laptop:h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={performanceData}>
-                <defs>
-                  <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
-                  </linearGradient>
-
-                  <linearGradient id="colorPass" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-
-                <XAxis
-                  dataKey="month"
-                  tick={{ fontSize: 10, fill: "#6B7280" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <YAxis
-                  domain={[0, 100]}
-                  tick={{ fontSize: 10, fill: "#6B7280" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip />
-
-                <Legend
-                  verticalAlign="bottom"
-                  height={36}
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: "12px" }}
-                />
-
-                {/* Avg Score */}
-                <Area
-                  type="monotone"
-                  dataKey="avgScore"
-                  stroke="#4f46e5"
-                  strokeWidth={2}
-                  fill="url(#colorScore)"
-                  name="Avg Score"
-                />
-
-                {/* Pass Rate */}
-                <Area
-                  type="monotone"
-                  dataKey="passRate"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fill="url(#colorPass)"
-                  name="Pass Rate"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-3 sm:mt-5 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-[14px] sm:text-[16px]">
-            <div className="flex items-center gap-2 text-[#4f46e5]">
-              {/* <span className="h-[3px] w-5 rounded-full bg-[#4f46e5]"></span> */}
-              {/* Avg Score */}
-            </div>
-            <div className="flex items-center gap-2 text-[#10b981]">
-              {/* <span className="h-[3px] w-5 rounded-full bg-[#10b981]"></span> */}
-              {/* Pass Rate */}
-            </div>
-          </div>
-        </Card>
-
+      <PerformanceOverview performanceData={performanceData}>
         <Card className="p-4 sm:p-5 laptop:p-6 xl:p-7">
           <CourseDistribution />
         </Card>
-      </div>
+      </PerformanceOverview>
 
       <div className="mt-6 mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="w-full">
           <ExamParticipation />
         </div>
 
-        <Card className="p-6 sm:p-6 laptop:p-4 xl:p-4">
-          <SectionTitle
-            title="Performance Distribution"
-            subtitle="Students by performance level"
-          />
-
-          <div className="mt-2 sm:mt-2 laptop:mt-4 xl:mt-4">
-            <MiniProgress
-              label="Excellent (90-100%)"
-              students="156 students"
-              percent="18%"
-              color="bg-[#11c14d]"
-              width="w-[18%]"
-            />
-            <MiniProgress
-              label="Good (80-89%)"
-              students="342 students"
-              percent="40%"
-              color="bg-[#3b82f6]"
-              width="w-[40%]"
-            />
-            <MiniProgress
-              label="Average (70-79%)"
-              students="268 students"
-              percent="31%"
-              color="bg-[#eab308]"
-              width="w-[31%]"
-            />
-            <MiniProgress
-              label="Below Average (<70%)"
-              students="95 students"
-              percent="11%"
-              color="bg-[#ff3131]"
-              width="w-[11%]"
-            />
-          </div>
-        </Card>
+        <StudentPerformanceMetrics />
       </div>
 
-      <div className="mt-6 mb-8 grid grid-cols-1 gap-4 laptop:grid-cols-1 xl:grid-cols-[1fr_2fr]">
-        <Card className="p-3 sm:p-4 laptop:p-5 xl:p-6">
-          <SectionTitle
-            title="Recent Registrations"
-            action={
-              <button className="text-[14px] sm:text-[16px] font-medium text-[#4f46e5]">
-                View All
-              </button>
-            }
-          />
+      <RecentActivityOverview 
+        registrations={data.registrations} 
+        examActivity={data.examActivity} 
+      />
 
-          <div className="space-y-3 sm:space-y-4 laptop:space-y-6">
-            {data.registrations.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start justify-between gap-2 sm:gap-3"
-              >
-                <div className="flex items-center gap-2 sm:gap-3 laptop:gap-4">
-                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 laptop:h-11 laptop:w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] to-[#9333ea] text-xs sm:text-sm font-semibold text-white shadow-md flex-shrink-0">
-                    {item.initials}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-[12px] sm:text-[14px] laptop:text-[16px] font-semibold text-[#1c2434] truncate">
-                      {item.name}
-                    </h4>
-                    <p className="text-[11px] sm:text-[13px] laptop:text-[15px] text-[#6b7280] truncate">
-                      {item.course}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-[11px] sm:text-[13px] laptop:text-[15px] text-[#9ca3af] flex-shrink-0">
-                  {item.date}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card className="p-3 sm:p-4 laptop:p-5 xl:p-6">
-          <SectionTitle
-            title="Recent Exam Activity"
-            action={
-              <button className="text-[14px] sm:text-[16px]  font-medium text-[#4f46e5]">
-                View All
-              </button>
-            }
-          />
-
-          <div className="space-y-3 sm:space-y-4 laptop:space-y-5">
-            {data.examActivity.map((item) => (
-              <div
-                key={item.id}
-                className="flex flex-col justify-between gap-3 sm:gap-4 rounded-[12px] sm:rounded-[18px] border border-[#e9ddfb] p-3 sm:p-4 laptop:p-5"
-              >
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 laptop:h-14 laptop:w-14 items-center justify-center rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#a21caf] text-white shadow-md flex-shrink-0">
-                    <FileText size={18} className="sm:size-15 laptop:size-26" />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <h4 className="text-[13px] sm:text-[15px] laptop:text-[17px] font-semibold text-[#1c2434] line-clamp-2">
-                      {item.title}
-                    </h4>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 sm:gap-3 text-[12px] sm:text-[13px] laptop:text-[15px] text-[#5d677a]">
-                      <span className="flex items-center gap-1">
-                        <Users size={12} className="sm:size- laptop:size-15" />
-                        {item.enrolled} enrolled
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <IoMdCheckmarkCircleOutline
-                          size={12}
-                          className="sm:size-4 laptop:size-15"
-                        />
-                        {item.completed} completed
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-
-      <div className="mt-4">
-        <Card className="p-3 sm:p-4 laptop:p-5 xl:p-6">
-          <SectionTitle
-            title="Upcoming Exams"
-            subtitle="Scheduled exams for this week"
-            action={
-              <button className="text-[14px] sm:text-[16px] font-medium text-[#4f46e5]">
-                View All Schedule
-              </button>
-            }
-          />
-
-          <div className="grid grid-cols-1 gap-3 sm:gap-4 laptop:grid-cols-2 xl:grid-cols-3">
-            {data.upcomingExams.map((exam) => (
-              <div
-                key={exam.id}
-                className="rounded-[12px] sm:rounded-[18px] border border-[#dcdce8] p-4 sm:p-5 laptop:p-6"
-              >
-                <div className="mb-3 sm:mb-4 flex items-start justify-between gap-2">
-                  <h4 className="text-[14px] sm:text-[16px] laptop:text-[18px] font-semibold text-[#1c2434] line-clamp-2">
-                    {exam.title}
-                  </h4>
-                  <span className="rounded-md sm:rounded-lg bg-[#e0e7ff] px-2 py-1 sm:px-3 text-[11px] sm:text-[14px] font-medium text-[#4f46e5] flex-shrink-0">
-                    {exam.status}
-                  </span>
-                </div>
-
-                <div className="space-y-2 sm:space-y-3 text-[12px] sm:text-[15px] text-[#5d677a]">
-                  <p className="flex items-center gap-2">
-                    <Calendar
-                      size={14}
-                      className="sm:size-17 text-[#6366f1] flex-shrink-0"
-                    />
-                    <span className="truncate">{exam.date}</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Clock
-                      size={14}
-                      className="sm:size-17 text-[#6366f1] flex-shrink-0"
-                    />
-                    <span className="truncate">{exam.time}</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Users
-                      size={14}
-                      className="sm:size-17 text-[#6366f1] flex-shrink-0"
-                    />
-                    <span className="truncate">
-                      {exam.students} students registered
-                    </span>
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }

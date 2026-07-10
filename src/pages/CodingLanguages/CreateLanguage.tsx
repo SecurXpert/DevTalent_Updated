@@ -31,9 +31,9 @@ export default function CreateLanguage() {
         navigate('/adminlogin');
         return;
       }
-        const payload = { lang_name: name.trim(), description: description.trim() };
-        const base = API_BASE_URL || 'http://192.168.0.103:8000';
-        const res = await fetch(`${base}/languages/`, {
+      const payload = { lang_name: name.trim(), description: description.trim() };
+      const base = API_BASE_URL || 'http://192.168.0.100:8000';
+      const res = await fetch(`${base}/languages/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token },
         body: JSON.stringify(payload),

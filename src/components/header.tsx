@@ -15,7 +15,7 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full bg-white border border-gray-200 rounded-none px-3 sm:px-4 md:px-5 py-2 sm:py-3 flex items-center justify-between shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-white border border-gray-200 rounded-none px-3 sm:px-4 md:px-5 py-2 sm:py-3 flex items-center justify-between shadow-sm">
       {/* Left Section - Menu Button + Search */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1">
         {/* Sidebar Toggle Button - Visible on small screens */}

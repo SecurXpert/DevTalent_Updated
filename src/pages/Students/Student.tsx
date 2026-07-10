@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchStudents, deleteStudent, Student as ApiStudent } from "@/lib/api";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 import {
   FiUsers,
@@ -68,6 +71,33 @@ const Page: React.FC = () => {
   const [filterCourse, setFilterCourse] = useState("All Courses");
   const [filterDate, setFilterDate] = useState("All Time");
   const navigate = useNavigate();
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  const handleExportReport = async () => {
+    if (!pageRef.current) return;
+    toast.info("Generating PDF report, please wait...");
+    
+    try {
+      const canvas = await html2canvas(pageRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#F5F3FF",
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdfWidth = 210;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      const pdf = new jsPDF("p", "mm", [pdfWidth, pdfHeight]);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("Students_Report.pdf");
+      toast.success("Report exported successfully!");
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to export report. Please try again.");
+    }
+  };
 
   const filteredStudents = students.filter(s => {
     const query = searchQuery.toLowerCase();
@@ -169,7 +199,7 @@ const Page: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#F5F3FF] min-h-screen p-4 md:p-6 space-y-6 w-full max-w-full overflow-x-hidden">
+    <div className="bg-[#F5F3FF] min-h-screen p-4 md:p-6 space-y-6 w-full max-w-full overflow-x-hidden" ref={pageRef}>
       {loading ? (
         <p className="text-center">Loading students…</p>
       ) : (
@@ -220,7 +250,7 @@ const Page: React.FC = () => {
           </div>
 
           {/* SEARCH BAR */}
-          <div className="bg-white border rounded-2xl p-3 sm:p-4 flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between shadow-lg border-[#F5F3FF] border-[2px] h-auto">
+          <div className="bg-white border rounded-2xl p-3 sm:p-4 flex flex-col md:flex-row gap-3 sm:gap-4 items-center justify-between shadow-lg border-[#F5F3FF] border-[2px] h-auto" data-html2canvas-ignore="true">
             <div className="flex items-center gap-2 sm:gap-3 w-full md:flex-1 border rounded-xl px-3 py-2 sm:py-3">
               <FiSearch className="text-gray-400 flex-shrink-0" />
               <input
@@ -241,13 +271,16 @@ const Page: React.FC = () => {
               >
                 <FiFilter /> Filters
               </button>
-              <button className="flex items-center gap-2 px-3 py-2 sm:px-4 font-[inter,sans-serif] font-semibold font-weight-500 bg-[#F5F3FF] border rounded-lg text-sm w-full md:w-auto">
+              <button 
+                onClick={handleExportReport}
+                className="flex items-center gap-2 px-3 py-2 sm:px-4 font-[inter,sans-serif] font-semibold font-weight-500 bg-[#F5F3FF] border rounded-lg text-sm w-full md:w-auto"
+              >
                 <FiDownload /> Export
               </button>
             </div>
           </div>
           {showFilters && (
-            <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4">
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-4" data-html2canvas-ignore="true">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">Status</h4>
@@ -375,7 +408,7 @@ const Page: React.FC = () => {
                     <th className="px-6 py-4">Phone Number</th>
                     <th className="px-6 py-4">Registration Date</th>
                     <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4 text-center">Actions</th>
+                    <th className="px-6 py-4 text-center" data-html2canvas-ignore="true">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
@@ -449,7 +482,7 @@ const Page: React.FC = () => {
                         </td>
 
                         {/* Actions */}
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap" data-html2canvas-ignore="true">
                           <div className="flex items-center justify-center gap-3 text-gray-400">
                             <button
                               onClick={() => handleViewStudent(s)}

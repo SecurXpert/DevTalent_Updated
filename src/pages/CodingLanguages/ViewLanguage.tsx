@@ -22,7 +22,7 @@ export default function ViewLanguage() {
       try {
         const token = getAuthToken();
         if (!token) { toast.error('Authentication required'); navigate('/adminlogin'); return; }
-        const base = API_BASE_URL || 'http://192.168.0.103:8000';
+        const base = API_BASE_URL || 'http://192.168.0.100:8000';
         const res = await fetch(`${base}/languages/${id}`, { headers: { Authorization: token } });
         if (res.ok) {
           const data = await res.json();
@@ -75,8 +75,8 @@ export default function ViewLanguage() {
             <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center"> </div>
             <div>
               <div className="text-sm opacity-80">Coding Language</div>
-                <div className="text-2xl font-bold">{language.lang_name ?? language.name}</div>
-                <div className="mt-2 text-xs bg-white/20 inline-block px-3 py-1 rounded">#{language.lang_id ?? language.id}</div>
+              <div className="text-2xl font-bold">{language.lang_name ?? language.name}</div>
+              <div className="mt-2 text-xs bg-white/20 inline-block px-3 py-1 rounded">#{language.lang_id ?? language.id}</div>
             </div>
           </div>
         </div>

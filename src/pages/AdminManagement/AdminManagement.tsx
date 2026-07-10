@@ -48,6 +48,7 @@ export default function AdminManagement() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [togglingId, setTogglingId] = useState<number | null>(null);
 
   const getAuthToken = () => {
     const possibleKeys = ['adminToken', 'token', 'access_token', 'auth_token', 'jwt', 'userToken'];
@@ -227,6 +228,62 @@ export default function AdminManagement() {
     }
   };
 
+  const handleToggleStatus = async (id: number, currentStatus: 'Active' | 'Inactive') => {
+    setTogglingId(id);
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        toast.error('Authentication token not found. Please login first.');
+        navigate('/login');
+        return;
+      }
+
+      const newIsActive = currentStatus !== 'Active';
+
+      const response = await fetch(`${API_BASE_URL}/auth/super-admin/admins/${id}/status?is_active=${newIsActive}`, {
+        method: 'PATCH',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': token,
+        },
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('isAdminAuthenticated');
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('userRole');
+        toast.error('Session expired or unauthorized. Please login again.');
+        navigate('/adminlogin');
+        return;
+      }
+
+      if (response.ok) {
+        const updatedStatus = newIsActive ? 'Active' : 'Inactive';
+        const updatedAdmins = admins.map(a => 
+          a.id === id ? { ...a, status: updatedStatus } : a
+        );
+        setAdmins(updatedAdmins as Admin[]);
+        localStorage.setItem('adminManagementList', JSON.stringify(updatedAdmins));
+        toast.success(`Admin status changed to ${updatedStatus}`);
+      } else {
+        const errorText = await response.text();
+        let errMsg = `Failed to change status: ${response.status}`;
+        try {
+          const errData = JSON.parse(errorText);
+          errMsg = errData.detail?.[0]?.msg || errData.message || errMsg;
+        } catch {
+          if (errorText) errMsg += ` - ${errorText.substring(0, 150)}`;
+        }
+        toast.error(errMsg);
+      }
+    } catch (error) {
+      console.error('Error changing admin status:', error);
+      toast.error('An error occurred while changing the status.');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const handleEdit = (id: number) => {
     navigate(`/admin-management/edit/${id}`);
   };
@@ -380,31 +437,24 @@ export default function AdminManagement() {
                           {admin.role.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          {admin.modules.slice(0, 2).map((module) => (
-                            <span key={module} className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
-                              {module}
-                            </span>
-                          ))}
-                          {admin.modules.length > 2 && (
-                            <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
-                              +{admin.modules.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{admin.createdDate}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            admin.status === 'Active'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}
-                        >
-                          {admin.status}
-                        </span>
+                        <div className="flex flex-col items-start gap-1">
+                          <button
+                            onClick={() => handleToggleStatus(admin.id, admin.status)}
+                            disabled={togglingId === admin.id}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold transition-opacity hover:opacity-80 disabled:opacity-50 ${
+                              admin.status === 'Active'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {togglingId === admin.id ? 'Updating...' : admin.status}
+                          </button>
+                          <span className="text-[10px] text-gray-400 italic">
+                            Click to make {admin.status === 'Active' ? 'inactive' : 'active'}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">

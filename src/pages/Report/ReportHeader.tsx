@@ -1,9 +1,36 @@
 import React from "react";
 import { FiFileText, FiFile } from "react-icons/fi";
+import { RiFileExcel2Line } from "react-icons/ri";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const ReportHeader: React.FC = () => {
-  const exportPDF = () => {
-    alert("Export PDF clicked");
+  const exportPDF = async () => {
+    const reportElement = document.getElementById("report-container");
+    if (!reportElement) return;
+    toast.info("Generating PDF report, please wait...");
+    
+    try {
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#f5f3ff",
+        logging: false
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdfWidth = 210;
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      const pdf = new jsPDF("p", "mm", [pdfWidth, pdfHeight]);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("Analytics_Report.pdf");
+      toast.success("Report exported successfully!");
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      toast.error("Failed to export report. Please try again.");
+    }
   };
 
   const exportExcel = () => {
@@ -21,7 +48,7 @@ const ReportHeader: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full lg:w-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 w-full lg:w-auto" data-html2canvas-ignore="true">
         <button
           onClick={exportPDF}
           className="bg-[#ff0000] hover:bg-[#e00000] text-white rounded-xl px-2 sm:px-3 md:px-4 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 font-medium shadow-sm transition w-full h-[36px] sm:h-[40px] lg:h-[44px] text-[11px] sm:text-[13px] lg:text-[14px]"

@@ -37,7 +37,7 @@ export default function CodingLanguages() {
         toast.error('Authentication required');
         return;
       }
-      const base = API_BASE_URL || 'http://192.168.0.103:8000';
+      const base = API_BASE_URL || 'http://192.168.0.100:8000';
       const res = await fetch(`${base}/languages/`, { headers: { Authorization: token } });
       if (res.ok) {
         const data = await res.json();
@@ -67,7 +67,7 @@ export default function CodingLanguages() {
     try {
       const token = getAuthToken();
       if (!token) { toast.error('Authentication required'); return; }
-      const base = API_BASE_URL || 'http://192.168.0.103:8000';
+      const base = API_BASE_URL || 'http://192.168.0.100:8000';
       const res = await fetch(`${base}/languages/${id}`, { method: 'DELETE', headers: { Authorization: token } });
       if (res.ok) {
         toast.success('Deleted');
@@ -84,7 +84,7 @@ export default function CodingLanguages() {
   const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setUploading(true);
     try {
       const text = await file.text();
@@ -93,25 +93,25 @@ export default function CodingLanguages() {
         toast.error('CSV must have header and at least one row');
         return;
       }
-      
+
       const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
       const langNameIdx = headers.findIndex(h => h.includes('lang_name') || h.includes('name'));
       const descIdx = headers.findIndex(h => h.includes('description') || h.includes('desc'));
-      
+
       if (langNameIdx === -1) {
         toast.error('CSV must have lang_name or name column');
         return;
       }
-      
+
       const token = getAuthToken();
       if (!token) { toast.error('Auth required'); return; }
-      const base = API_BASE_URL || 'http://192.168.0.103:8000';
-      
+      const base = API_BASE_URL || 'http://192.168.0.100:8000';
+
       let created = 0;
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split(',').map(c => c.trim());
         if (!cols[langNameIdx]) continue;
-        
+
         const res = await fetch(`${base}/languages/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: token },
@@ -119,7 +119,7 @@ export default function CodingLanguages() {
         });
         if (res.ok) created++;
       }
-      
+
       toast.success(`${created} languages created`);
       fetchLanguages();
     } catch (err) {

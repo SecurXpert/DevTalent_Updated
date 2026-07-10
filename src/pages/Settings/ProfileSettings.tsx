@@ -31,7 +31,6 @@ const ProfileSettings: React.FC = () => {
     phone: "",
     role: "Platform Administrator",
     location: "",
-    bio: "",
   });
 
   useEffect(() => {
@@ -44,7 +43,16 @@ const ProfileSettings: React.FC = () => {
 
         if (!token) return;
 
-        const response = await fetch(`${BASE_URL}/auth/profile`, {
+        const userRole = localStorage.getItem("userRole");
+        let endpoint = `${BASE_URL}/auth/profile`;
+
+        if (userRole === "super_admin") {
+          endpoint = `${BASE_URL}/auth/profile`;
+        } else if (userRole === "admin") {
+          endpoint = `${BASE_URL}/auth/admin/profile`;
+        }
+
+        const response = await fetch(endpoint, {
           method: "GET",
           headers: {
             "Accept": "application/json",
@@ -63,7 +71,6 @@ const ProfileSettings: React.FC = () => {
             phone: data.phone || "",
             role: data.role || "Platform Administrator",
             location: locationVal,
-            bio: data.bio || "",
           });
         }
       } catch (error) {
@@ -183,7 +190,7 @@ const ProfileSettings: React.FC = () => {
           </div>
 
           {!isEditing && (
-            <button 
+            <button
               onClick={() => {
                 if ((window as any).triggerPersonalInfoEdit) {
                   (window as any).triggerPersonalInfoEdit();
@@ -208,8 +215,8 @@ const ProfileSettings: React.FC = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`font-medium pb-4 border-b-2 whitespace-nowrap transition-colors ${activeTab === tab
-                  ? "text-purple-600 border-purple-600"
-                  : "text-slate-500 hover:text-slate-700 border-transparent"
+                ? "text-purple-600 border-purple-600"
+                : "text-slate-500 hover:text-slate-700 border-transparent"
                 }`}
             >
               {tab}
@@ -297,7 +304,7 @@ const ProfileSettings: React.FC = () => {
             {/* Active Sessions */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-slate-800 mb-2">Active Sessions</h3>
-              
+
               <div className="border border-gray-200 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center">
@@ -334,7 +341,7 @@ const ProfileSettings: React.FC = () => {
         {activeTab === "Notifications" && (
           <div className="space-y-4">
             {notificationSettings.map((setting) => (
-              <div 
+              <div
                 key={setting.id}
                 className="border border-gray-200 rounded-xl p-5 flex items-center justify-between bg-white transition-colors hover:bg-gray-50/50"
               >
@@ -349,14 +356,12 @@ const ProfileSettings: React.FC = () => {
                 </div>
                 <button
                   onClick={() => toggleNotification(setting.id)}
-                  className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${
-                    notifications[setting.id] ? "bg-purple-600" : "bg-gray-200"
-                  }`}
+                  className={`w-11 h-6 rounded-full flex items-center transition-colors px-1 ${notifications[setting.id] ? "bg-purple-600" : "bg-gray-200"
+                    }`}
                 >
                   <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                      notifications[setting.id] ? "translate-x-5" : "translate-x-0"
-                    }`}
+                    className={`w-4 h-4 rounded-full bg-white transition-transform ${notifications[setting.id] ? "translate-x-5" : "translate-x-0"
+                      }`}
                   />
                 </button>
               </div>
@@ -374,7 +379,7 @@ const ProfileSettings: React.FC = () => {
         {activeTab === "Activity" && (
           <div className="space-y-4">
             {activities.map((activity) => (
-              <div 
+              <div
                 key={activity.id}
                 className="border border-gray-200 rounded-xl p-5 flex items-start gap-4 bg-white"
               >

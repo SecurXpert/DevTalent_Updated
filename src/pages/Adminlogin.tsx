@@ -12,9 +12,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { API_BASE_URL } from "@/pages/Services/api/api";
+import { useProfile } from "../contexts/ProfileContext";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
+  const { refreshProfile } = useProfile();
 
   // "super_admin" or "admin"
   const [role, setRole] = useState<"super_admin" | "admin">("super_admin");
@@ -55,6 +57,8 @@ export default function AdminLogin() {
         localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("adminEmail", email);
         localStorage.setItem("userRole", role);
+
+        await refreshProfile();
 
         toast.success("Login successful!");
         if (role === "super_admin") {
@@ -173,7 +177,7 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   onClick={() => setRole("super_admin")}
-                  className={`relative flex-1 p-4.5 rounded-2xl transition-all duration-300 border text-left flex flex-col justify-between h-[105px] group ${
+                  className={`relative flex-1 p-4 rounded-2xl transition-all duration-300 border text-center flex flex-col items-center justify-center gap-2 h-[105px] group ${
                     role === "super_admin"
                       ? "text-white border-transparent scale-[1.02]"
                       : "bg-white text-slate-600 border-slate-200 hover:border-purple-200 hover:bg-slate-50/50"
@@ -210,7 +214,7 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   onClick={() => setRole("admin")}
-                  className={`relative flex-1 p-4.5 rounded-2xl transition-all duration-300 border text-left flex flex-col justify-between h-[105px] group ${
+                  className={`relative flex-1 p-4 rounded-2xl transition-all duration-300 border text-center flex flex-col items-center justify-center gap-2 h-[105px] group ${
                     role === "admin"
                       ? "text-white border-transparent scale-[1.02]"
                       : "bg-white text-slate-600 border-slate-200 hover:border-purple-200 hover:bg-slate-50/50"

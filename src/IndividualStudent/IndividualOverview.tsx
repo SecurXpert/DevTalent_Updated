@@ -278,7 +278,7 @@ export default function IndividualOverview() {
 
         if (response.ok) {
           const data = await response.json();
-          const attemptId = data.attempt_id || data.id;
+          const attemptId = typeof data === 'string' ? data : (data.attempt_id || data.id);
 
           const currentExam = exams.find(e => String(e.id) === String(examId));
 
@@ -316,7 +316,7 @@ export default function IndividualOverview() {
 
         if (response.ok) {
           const data = await response.json();
-          const attemptId = data.attempt_id || data.id;
+          const attemptId = typeof data === 'string' ? data : (data.attempt_id || data.id);
 
           // Find the exam to pass title and duration to the paper component
           const currentExam = exams.find(e => String(e.id) === String(examId));

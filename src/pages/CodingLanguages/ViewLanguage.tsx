@@ -22,7 +22,7 @@ export default function ViewLanguage() {
       try {
         const token = getAuthToken();
         if (!token) { toast.error('Authentication required'); navigate('/adminlogin'); return; }
-        const base = API_BASE_URL || 'http://192.168.0.100:8000';
+        const base = API_BASE_URL;
         const res = await fetch(`${base}/languages/${id}`, { headers: { Authorization: token } });
         if (res.ok) {
           const data = await res.json();
@@ -44,7 +44,8 @@ export default function ViewLanguage() {
     try {
       const token = getAuthToken();
       if (!token) { toast.error('Authentication required'); navigate('/adminlogin'); return; }
-      const res = await fetch(`${API_BASE_URL}/coding-languages/${id}`, { method: 'DELETE', headers: { Authorization: token } });
+      const base = API_BASE_URL;
+      const res = await fetch(`${base}/languages/${id}`, { method: 'DELETE', headers: { Authorization: token } });
       if (res.ok) { toast.success('Deleted'); navigate('/coding-languages'); }
       else { toast.error('Failed to delete'); }
     } catch (err) { console.error(err); toast.error('Error deleting'); }

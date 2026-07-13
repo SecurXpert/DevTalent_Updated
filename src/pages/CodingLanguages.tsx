@@ -37,7 +37,7 @@ export default function CodingLanguages() {
         toast.error('Authentication required');
         return;
       }
-      const base = API_BASE_URL || 'http://192.168.0.100:8000';
+      const base = API_BASE_URL;
       const res = await fetch(`${base}/languages/`, { headers: { Authorization: token } });
       if (res.ok) {
         const data = await res.json();
@@ -67,7 +67,7 @@ export default function CodingLanguages() {
     try {
       const token = getAuthToken();
       if (!token) { toast.error('Authentication required'); return; }
-      const base = API_BASE_URL || 'http://192.168.0.100:8000';
+      const base = API_BASE_URL;
       const res = await fetch(`${base}/languages/${id}`, { method: 'DELETE', headers: { Authorization: token } });
       if (res.ok) {
         toast.success('Deleted');
@@ -105,7 +105,7 @@ export default function CodingLanguages() {
 
       const token = getAuthToken();
       if (!token) { toast.error('Auth required'); return; }
-      const base = API_BASE_URL || 'http://192.168.0.100:8000';
+      const base = API_BASE_URL;
 
       let created = 0;
       for (let i = 1; i < lines.length; i++) {

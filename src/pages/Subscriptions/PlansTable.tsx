@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Pencil, Trash2, BookOpen, CheckSquare, Code, Save, X } from "lucide-react";
-import { BASE_URL } from "../../lib/api";
+import { API_BASE_URL } from "../Services/api/api";
 
 type PlanItem = {
   id: number;
@@ -70,7 +70,7 @@ const PlansTable: React.FC<Props> = ({ plans, onEdit, onDelete, onUpdate }) => {
         is_active: editForm.is_active !== undefined ? editForm.is_active : true,
       };
 
-      const response = await fetch(`${BASE_URL || 'http://192.168.0.100:8000'}/admin/catalog/plans/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/catalog/plans/${id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(requestBody),

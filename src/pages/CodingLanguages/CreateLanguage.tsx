@@ -32,7 +32,7 @@ export default function CreateLanguage() {
         return;
       }
       const payload = { lang_name: name.trim(), description: description.trim() };
-      const base = API_BASE_URL || 'http://192.168.0.100:8000';
+      const base = API_BASE_URL;
       const res = await fetch(`${base}/languages/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: token },

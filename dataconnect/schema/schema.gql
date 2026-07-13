@@ -1,0 +1,38 @@
+type User @table {
+  displayName: String!
+  createdAt: Timestamp!
+  email: String
+  photoUrl: String
+  lastLoginAt: Timestamp
+}
+
+type NoItem @table {
+  user: User!
+  name: String!
+  createdAt: Timestamp!
+  description: String
+  goal: String
+  targetFrequency: String
+  isActive: Boolean
+}
+
+type Category @table {
+  user: User!
+  name: String!
+  createdAt: Timestamp!
+  description: String
+}
+
+type NoItemCategory @table(key: ["noItem", "category"]) {
+  noItem: NoItem!
+  category: Category!
+  createdAt: Timestamp!
+}
+
+type LogEntry @table {
+  user: User!
+  noItem: NoItem!
+  loggedAt: Timestamp!
+  isSuccess: Boolean!
+  notes: String
+}

@@ -1,0 +1,115 @@
+mutation SeedDemoData @transaction @auth(level: USER, insecureReason: "This mutation is for seeding initial data and is only accessible to authenticated users.") {
+  # Insert Users
+  user_insertMany(data: [
+    {
+      id: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      displayName: "Alice Smith",
+      createdAt: "2023-10-26T10:00:00Z",
+      email: "alice.smith@example.com",
+      photoUrl: "https://example.com/alice.jpg"
+    },
+    {
+      id: "f1e2d3c4-b5a6-0987-6543-210fedcba987",
+      displayName: "Bob Johnson",
+      createdAt: "2023-10-26T10:05:00Z",
+      email: "bob.johnson@example.com",
+      photoUrl: "https://example.com/bob.jpg"
+    }
+  ])
+
+  # Insert Categories
+  category_insertMany(data: [
+    {
+      id: "c1a2t3e4-g5o6-7890-1234-567890abcdef",
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      name: "Productivity",
+      createdAt: "2023-10-26T10:10:00Z",
+      description: "Items related to improving productivity"
+    },
+    {
+      id: "c5a6t7e8-g9o0-1234-5678-90abcdef0123",
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      name: "Health",
+      createdAt: "2023-10-26T10:15:00Z",
+      description: "Items related to health and wellness"
+    }
+  ])
+
+  # Insert NoItems
+  noItem_insertMany(data: [
+    {
+      id: "n1o2i3t4-e5m6-7890-1234-567890abcdef",
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      name: "No-Scroll Social Media",
+      createdAt: "2023-10-26T10:20:00Z",
+      description: "Avoid mindlessly scrolling social media feeds.",
+      goal: "Reduce daily social media usage",
+      targetFrequency: "Daily",
+      isActive: true
+    },
+    {
+      id: "n7o8i9t0-e1m2-3456-7890-abcdef012345",
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      name: "No-Sugar Drinks",
+      createdAt: "2023-10-26T10:25:00Z",
+      description: "Eliminate sugary beverages from diet.",
+      goal: "Improve diet and reduce sugar intake",
+      targetFrequency: "Continuously",
+      isActive: true
+    },
+    {
+      id: "x1y2z3a4-b5c6-d7e8-f9g0-1234567890ab",
+      userId: "f1e2d3c4-b5a6-0987-6543-210fedcba987",
+      name: "No-Fast Food",
+      createdAt: "2023-10-26T10:30:00Z",
+      description: "Avoid eating fast food.",
+      goal: "Eat healthier and cook more at home",
+      targetFrequency: "Weekly",
+      isActive: false
+    }
+  ])
+
+  # Insert NoItemCategories (linking NoItems to Categories)
+  noItemCategory_insertMany(data: [
+    {
+      noItemId: "n1o2i3t4-e5m6-7890-1234-567890abcdef",
+      categoryId: "c1a2t3e4-g5o6-7890-1234-567890abcdef",
+      createdAt: "2023-10-26T10:35:00Z"
+    },
+    {
+      noItemId: "n7o8i9t0-e1m2-3456-7890-abcdef012345",
+      categoryId: "c5a6t7e8-g9o0-1234-5678-90abcdef0123",
+      createdAt: "2023-10-26T10:40:00Z"
+    },
+    {
+      noItemId: "x1y2z3a4-b5c6-d7e8-f9g0-1234567890ab",
+      categoryId: "c5a6t7e8-g9o0-1234-5678-90abcdef0123",
+      createdAt: "2023-10-26T10:45:00Z"
+    }
+  ])
+
+  # Insert LogEntries
+  logEntry_insertMany(data: [
+    {
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      noItemId: "n1o2i3t4-e5m6-7890-1234-567890abcdef",
+      loggedAt: "2023-10-26T11:00:00Z",
+      isSuccess: true,
+      notes: "Successfully avoided social media for the day."
+    },
+    {
+      userId: "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      noItemId: "n7o8i9t0-e1m2-3456-7890-abcdef012345",
+      loggedAt: "2023-10-26T11:30:00Z",
+      isSuccess: false,
+      notes: "Had a soda with lunch, need to be more careful."
+    },
+    {
+      userId: "f1e2d3c4-b5a6-0987-6543-210fedcba987",
+      noItemId: "x1y2z3a4-b5c6-d7e8-f9g0-1234567890ab",
+      loggedAt: "2023-10-26T12:00:00Z",
+      isSuccess: true,
+      notes: "Cooked dinner at home instead of getting takeout."
+    }
+  ])
+}

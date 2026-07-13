@@ -1,0 +1,43 @@
+# Operation 1: List all publicly visible blog posts
+query ListPublicPosts @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  posts(where: {isPublished: {eq: true}}) {
+    id
+    title
+    content
+    author {
+      username
+    }
+  }
+}
+
+# Operation 2: Get a specific post by ID, accessible to all logged-in users
+query GetPostById($postId: ID!) @auth(level: USER, insecureReason: "This operation is safe to expose to all logged in users.") {
+  post(key: {id: $postId}) {
+    id
+    title
+    content
+    createdAt
+    author {
+      username
+    }
+  }
+}
+
+# Operation 3: Create a new blog post (only for logged-in users)
+mutation CreatePost($title: String!, $content: String!) @auth(level: USER, insecureReason: "This operation allows logged-in users to create content.") {
+  post: post_insert(data: {
+    title: $title,
+    content: $content,
+    isPublished: false, # Initially not published
+    authorUid_expr: "auth.uid" # Assigns the current user as the author
+  })
+}
+
+# Operation 4: Update an existing post, only if the current user is the author
+mutation UpdateMyPost($postId: ID!, $title: String, $content: String, $isPublished: Boolean) @auth(expr: "resource.authorUid == auth.uid", insecureReason: "This operation allows users to update their own posts.") {
+  post: post_update(key: {id: $postId}, data: {
+    title: $title,
+    content: $content,
+    isPublished: $isPublished
+  })
+}

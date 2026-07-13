@@ -1,0 +1,136 @@
+--- src/IndividualStudent/Results.tsx
++++ src/IndividualStudent/Results.tsx
+@@ -1,4 +1,4 @@
+-import React, { useState } from "react";
++import React, { useState, useEffect } from "react";
+ import { useNavigate } from "react-router-dom";
+ import Devlogo from "../assests/Devlogo.png";
+ import {
+@@ -21,26 +21,114 @@
+   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+   LineChart, Line, Cell
+ } from 'recharts';
++import { API_BASE_URL } from "@/pages/Services/api/api";
+ 
+ const Results = () => {
+   const navigate = useNavigate();
+   const [searchTerm, setSearchTerm] = useState("");
++  const [loading, setLoading] = useState(true);
++  const [coursePerformanceData, setCoursePerformanceData] = useState<any[]>([]);
++  const [summary, setSummary] = useState({
++    totalExams: 0,
++    passedExams: 0,
++    failedExams: 0,
++    averageScore: 0,
++  });
+ 
+-  const summary = {
+-    totalExams: 8,
+-    passedExams: 5,
+-    failedExams: 3,
+-    averageScore: 68,
+-  };
+-
+-  const coursePerformanceData = [
+-    { name: 'Full Stack Web Dev...', score: 85 },
+-    { name: 'Data Structures...', score: 50 },
+-    { name: 'Python forMachine...', score: 65 },
+-    { name: 'System Design...', score: 45 },
+-    { name: 'CloudComputing wi...', score: 90 },
+-  ];
++  useEffect(() => {
++    const fetchPerformance = async () => {
++      try {
++        const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
++        
++        // 1. Fetch user's subscriptions to get their courses
++        const subResponse = await fetch(`${API_BASE_URL}/student/subscription/current`, {
++          headers: { "Authorization": `Bearer ${token}` }
++        });
++        
++        let courseIds: number[] = [];
++        let courseMap = new Map<number, string>();
++
++        if (subResponse.ok) {
++          const subData = await subResponse.json();
++          const subs = Array.isArray(subData) ? subData : (subData ? [subData] : []);
++          const activeSubs = subs.filter((s: any) => s.status === 'active' || s.status === 'Success');
++          
++          activeSubs.forEach((sub: any) => {
++             if (sub.selected_courses && Array.isArray(sub.selected_courses)) {
++                sub.selected_courses.forEach((c: any) => {
++                   const cId = c.course_id || c.id || c;
++                   if (cId && !courseIds.includes(cId)) {
++                      courseIds.push(cId);
++                      courseMap.set(cId, c.course_name || `Course ${cId}`);
++                   }
++                });
++             }
++          });
++        }
++
++        // 2. Fetch catalog to ensure we have course names if they weren't in the subscription
++        if (courseIds.length > 0) {
++          const coursesResponse = await fetch(`${API_BASE_URL}/admin/catalog/courses`, {
++            headers: { "Authorization": `Bearer ${token}` }
++          });
++          if (coursesResponse.ok) {
++             const coursesData = await coursesResponse.json();
++             const list = Array.isArray(coursesData) ? coursesData : (coursesData.data || coursesData.items || []);
++             list.forEach((c: any) => {
++                if (courseMap.has(c.id)) {
++                   courseMap.set(c.id, c.name);
++                }
++             });
++          }
++        }
++
++        // 3. Fetch performance for each course
++        let totalAttempted = 0;
++        let totalPassed = 0;
++        let totalAvg = 0;
++        let performanceList = [];
++
++        for (const cId of courseIds) {
++           const perfResponse = await fetch(`${API_BASE_URL}/student/scorecard/courses/${cId}/performance`, {
++              headers: { "Authorization": `Bearer ${token}` }
++           });
++           if (perfResponse.ok) {
++              const perfData = await perfResponse.json();
++              
++              totalAttempted += perfData.total_exams_attempted || 0;
++              totalPassed += perfData.total_exams_passed || 0;
++              totalAvg += perfData.average_percentage || 0;
++
++              performanceList.push({
++                 name: courseMap.get(cId) || `Course ${cId}`,
++                 score: perfData.average_percentage || 0,
++                 ...perfData
++              });
++           }
++        }
++
++        setCoursePerformanceData(performanceList);
++        
++        let failed = totalAttempted - totalPassed;
++        if (failed < 0) failed = 0;
++
++        setSummary({
++           totalExams: totalAttempted,
++           passedExams: totalPassed,
++           failedExams: failed,
++           averageScore: performanceList.length > 0 ? Math.round(totalAvg / performanceList.length) : 0
++        });
++
++        setLoading(false);
++
++      } catch (err) {
++        console.error("Error fetching performance", err);
++        setLoading(false);
++      }
++    };
++
++    fetchPerformance();
++  }, []);
+ 
+   const recentActivityData = [

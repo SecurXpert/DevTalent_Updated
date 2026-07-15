@@ -295,7 +295,9 @@ export default function IndividualOverview() {
             }
           });
         } else {
-          toast.error("Failed to start Coding exam. Please try again.");
+          const errData = await response.json().catch(() => ({}));
+          const errorMessage = errData.detail || errData.message || "Failed to start Coding exam. Please try again.";
+          toast.error(errorMessage);
         }
       } catch (error) {
         console.error("Error starting Coding exam:", error);
@@ -334,7 +336,9 @@ export default function IndividualOverview() {
             }
           });
         } else {
-          toast.error("Failed to start MCQ exam. Please try again.");
+          const errData = await response.json().catch(() => ({}));
+          const errorMessage = errData.detail || errData.message || "Failed to start MCQ exam. Please try again.";
+          toast.error(errorMessage);
         }
       } catch (error) {
         console.error("Error starting MCQ exam:", error);

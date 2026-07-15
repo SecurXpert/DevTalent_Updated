@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { Clock, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { toast } from "sonner";
 import Devlogo from "../assests/Devlogo.png";
 import { API_BASE_URL } from "@/pages/Services/api/api";
 
@@ -48,8 +49,8 @@ const MCQPaper: React.FC = () => {
   // Decode JWT to get user ID and college name
   useEffect(() => {
     if (!token) {
-      alert("Please login");
-      navigate("/");
+      toast.error("Please login first");
+      navigate("/login");
       return;
     }
     try {

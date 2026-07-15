@@ -148,7 +148,7 @@ const Page: React.FC = () => {
     {
       title: "Active Students",
       value: activeStudents.toString(),
-      change: "8%", // Optional: Calculate dynamically if historical data exists
+      change: "8%", 
       icon: <FiBookOpen className="text-xl sm:text-xl md:text-2xl lg:text-2xl" />,
       bg: "bg-gradient-to-r from-green-500 to-emerald-600",
     },

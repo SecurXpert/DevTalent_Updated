@@ -179,7 +179,7 @@ const IndividualCompiler: React.FC = () => {
                 body: JSON.stringify({
                     course_id: courseId,
                     question_id: questionId,
-                    language: selectedLanguage,
+                    language: selectedLanguage.toLowerCase(),
                     source_code: code,
                     user_input: input
                 })
@@ -228,7 +228,7 @@ const IndividualCompiler: React.FC = () => {
                 body: JSON.stringify({
                     course_id: courseId,
                     exam_id: examId,
-                    language: selectedLanguage,
+                    language: selectedLanguage.toLowerCase(),
                     submissions: submissions
                 })
             });
@@ -273,7 +273,7 @@ const IndividualCompiler: React.FC = () => {
                 },
                 body: JSON.stringify({
                     course_id: courseId,
-                    language: selectedLanguage,
+                    language: selectedLanguage.toLowerCase(),
                     submissions: submissions
                 })
             });

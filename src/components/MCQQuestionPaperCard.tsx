@@ -285,7 +285,7 @@ const MCQQuestionPaperCard: React.FC = () => {
     } catch (err: any) {
       setStartingExamId(null);
       const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message || "Failed to start exam";
-      alert(errorMessage);
+      toast.error(errorMessage);
 
       if (errorMessage.toLowerCase().includes("already") || 
           errorMessage.toLowerCase().includes("time over") || 

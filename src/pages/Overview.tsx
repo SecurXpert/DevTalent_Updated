@@ -32,13 +32,14 @@ export default function Overview() {
 
   useEffect(() => {
     if (!token) {
+      // Only redirect if no token at all
       toast.error("Session expired. Please login again.");
       navigate("/");
       return;
     }
     fetchExams();
     // fetchSubmittedExams();
-  }, [navigate]);
+  }, [navigate, token]);
 
   const fetchExams = async () => {
     try {

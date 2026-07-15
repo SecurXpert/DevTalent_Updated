@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface Exam {
   id: number;
@@ -66,7 +67,8 @@ const ExamList: React.FC = () => {
     } catch (err: any) {
       console.error("Start exam error:", err);
       console.error("Error response:", err.response?.data);
-      alert(err.response?.data?.detail || err.message);
+      const errorMessage = err.response?.data?.detail || err.response?.data?.message || err.message || "Failed to start exam";
+      toast.error(errorMessage);
     } finally {
       setStartingExamId(null);
     }

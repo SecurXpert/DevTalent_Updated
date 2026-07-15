@@ -1,5 +1,5 @@
 import React from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, Upload } from "lucide-react";
 import { CodingQuestion, FormErrors } from "../../types";
 import InputField from "../../Shared/InputField";
 import TextAreaField from "../../Shared/TextAreaField";
@@ -167,6 +167,68 @@ const CodingQuestionEditor: React.FC<CodingQuestionEditorProps> = ({
             error={formErrors[`description_${question.id}`]}
           />
         </div>
+      </div>
+
+      {/* Test Cases Bulk Upload */}
+      <div className="mt-6 border-t border-[#e1e3ea] pt-4">
+        <div className="mb-4 flex items-center justify-between">
+          <h4 className="text-[16px] font-semibold text-[#111827]">
+            Test Cases (Bulk Upload)
+          </h4>
+          <label className="flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e1e3ea] bg-white px-3 py-1.5 text-[13px] font-medium text-[#111827]">
+            <Upload size={14} /> Upload JSON
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  try {
+                    const parsed = JSON.parse(event.target?.result as string);
+                    let cases = [];
+                    if (parsed.testcases && Array.isArray(parsed.testcases)) {
+                        cases = parsed.testcases;
+                    } else if (Array.isArray(parsed)) {
+                        cases = parsed;
+                    } else {
+                        alert("Invalid JSON format. Expected an array of testcases or { testcases: [...] }.");
+                        return;
+                    }
+                    onUpdateQuestion(question.id, "testCases", cases);
+                  } catch (err) {
+                    alert("Failed to parse JSON file.");
+                  }
+                };
+                reader.readAsText(file);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+
+        {(!question.testCases || question.testCases.length === 0) ? (
+          <p className="text-[13px] text-[#6b7280] italic">No test cases uploaded yet. Upload a JSON file to add bulk test cases.</p>
+        ) : (
+          <div className="rounded-[8px] bg-[#f9fafb] p-3 border border-[#e1e3ea]">
+            <p className="text-[14px] font-medium text-green-600 mb-2">
+              ✓ {question.testCases.length} test cases uploaded and ready.
+            </p>
+            <div className="max-h-40 overflow-y-auto text-[12px] bg-white border p-2 rounded">
+              <pre>{JSON.stringify(question.testCases.slice(0, 3), null, 2)}</pre>
+              {question.testCases.length > 3 && <p className="text-gray-500 mt-1">...and {question.testCases.length - 3} more.</p>}
+            </div>
+            <button
+                type="button"
+                className="mt-2 text-[12px] text-red-500 hover:underline"
+                onClick={() => onUpdateQuestion(question.id, "testCases", [])}
+            >
+                Clear uploaded test cases
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Save Question Button */}

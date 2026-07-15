@@ -39,6 +39,12 @@ export interface McqQuestion {
   marks: number;
 }
 
+export interface TestCase {
+  input_data: string;
+  expected_output: string;
+  is_hidden: boolean;
+}
+
 export interface CodingQuestion {
   id: number;
   type: "Coding";
@@ -52,6 +58,7 @@ export interface CodingQuestion {
   difficulty: string;
   timeLimit: number;
   description: string;
+  testCases?: TestCase[];
 }
 
 export interface ImageAnalysisQuestion {

@@ -4,23 +4,29 @@ import { toast } from "sonner";
 let isAlertShown = false;
 
 const handleSessionExpired = () => {
-  const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+  const isAdmin = localStorage.getItem("isAdminAuthenticated") === "true";
+  const userToken = localStorage.getItem("userToken");
+  const accessToken = localStorage.getItem("access_token");
+  
+  const token = accessToken || userToken;
   
   // If there is no token, they are not logged in, so it might just be a failed login attempt
-  if (!token) return;
+  if (!token && !isAdmin) return;
 
   if (isAlertShown) return;
   isAlertShown = true;
   
   toast.error("Session expired. Please log in again.");
   
-  const isAdmin = localStorage.getItem("isAdminAuthenticated") === "true";
+  const isIndividualStudent = accessToken && !userToken && !isAdmin;
   
   localStorage.clear();
   
   setTimeout(() => {
     if (isAdmin) {
       window.location.href = "/adminlogin";
+    } else if (isIndividualStudent) {
+      window.location.href = "/individual";
     } else {
       window.location.href = "/login";
     }

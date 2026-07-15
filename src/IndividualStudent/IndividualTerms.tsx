@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Camera, Mic } from "lucide-react";
+import { Camera, Mic, ArrowLeft } from "lucide-react";
 import { useNavigate, useParams, useLocation, useSearchParams } from "react-router-dom";
 import { API_BASE_URL } from "@/pages/Services/api/api";
 
@@ -124,6 +124,16 @@ const IndividualTerms: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 to-purple-600 py-10 px-4">
+      <div className="max-w-5xl mx-auto flex items-center mb-2">
+        <button
+          onClick={() => navigate("/studentdashboard")}
+          className="flex items-center gap-2 text-white/90 hover:text-white transition-colors font-medium"
+        >
+          <ArrowLeft size={20} />
+          Back to Dashboard
+        </button>
+      </div>
+
       <div className="max-w-5xl mx-auto text-white text-center mb-6">
         <h1 className="text-3xl md:text-4xl font-bold">
           Welcome to DevTalent Exam Platform

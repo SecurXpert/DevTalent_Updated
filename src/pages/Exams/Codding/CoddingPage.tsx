@@ -299,7 +299,7 @@ const CodingPage: React.FC = () => {
   const updateCodingQuestion = (
     id: number,
     field: keyof CodingQuestion,
-    value: string | number,
+    value: any,
   ) => {
     setQuestions((prev) =>
       prev.map((question) =>
@@ -444,6 +444,7 @@ const CodingPage: React.FC = () => {
         // Save all locally added coding questions
         if (newExamId !== Date.now()) {
           for (const question of questions) {
+            if (question.type !== "Coding") continue;
             if (!question.problemStatement.trim()) continue; // Skip empty questions
 
             const questionBody = {
@@ -458,13 +459,32 @@ const CodingPage: React.FC = () => {
             };
 
             try {
-              await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${newExamId}/questions`, {
+              const res = await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${newExamId}/questions`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(questionBody),
               });
+              
+              if (res.ok && question.testCases && question.testCases.length > 0) {
+                  const data = await res.json();
+                  const questionId = data.id || data.question_id;
+                  
+                  if (questionId) {
+                      await fetch(`${API_BASE_URL}/ind/coding/questions/${questionId}/testcases`, {
+                          method: 'POST',
+                          headers,
+                          body: JSON.stringify({
+                              testcases: question.testCases.map(tc => ({
+                                  input_data: tc.input_data,
+                                  expected_output: tc.expected_output,
+                                  is_hidden: tc.is_hidden || false
+                              }))
+                          })
+                      });
+                  }
+              }
             } catch (err) {
-              console.error("Failed to save a coding question:", err);
+              console.error("Failed to add question:", err);
             }
           }
         }
@@ -648,12 +668,33 @@ const CodingPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server error response:', errorText);
-        throw new Error(`Failed to save question: ${response.status} - ${errorText}`);
+        throw new Error("Failed to save question to backend");
       }
 
       const questionData = await response.json();
+      const questionId = questionData.id || questionData.question_id;
+
+      if (questionId && question.testCases && question.testCases.length > 0) {
+          await fetch(`${API_BASE_URL}/ind/coding/questions/${questionId}/testcases`, {
+              method: 'POST',
+              headers,
+              body: JSON.stringify({
+                  testcases: question.testCases.map(tc => ({
+                      input_data: tc.input_data,
+                      expected_output: tc.expected_output,
+                      is_hidden: tc.is_hidden || false
+                  }))
+              })
+          });
+      }
+
+      // Update local state to mark this question as saved
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === question.id ? { ...q, isSaved: true } : q,
+        ),
+      );
+      
       console.log('Question saved successfully:', questionData);
       alert('Question saved successfully!');
 

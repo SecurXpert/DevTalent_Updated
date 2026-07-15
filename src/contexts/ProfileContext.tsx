@@ -35,10 +35,16 @@ export function ProfileProvider({ children }: ProfileProviderProps) {
 
   const fetchProfile = async () => {
     try {
-      const token =
-        localStorage.getItem("adminToken") ||
-        localStorage.getItem("access_token") ||
-        localStorage.getItem("userToken");
+      const adminToken = localStorage.getItem("adminToken");
+      const userToken = localStorage.getItem("userToken");
+      const accessToken = localStorage.getItem("access_token");
+
+      // Individual students have their own profile fetching logic in their layout
+      if (accessToken && !userToken && !adminToken) {
+        return;
+      }
+
+      const token = adminToken || userToken || accessToken;
       
       const userRole = localStorage.getItem("userRole");
 

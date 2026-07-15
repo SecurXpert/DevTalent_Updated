@@ -16,6 +16,7 @@ interface QuestionType {
   sampleInput: string;
   sampleOutput: string;
   marks: number;
+  testCases?: { input_data: string; expected_output: string; is_hidden?: boolean }[];
 }
 
 interface CodingQuestionsSectionProps {
@@ -38,6 +39,7 @@ const CodingQuestionsSection: React.FC<CodingQuestionsSectionProps> = ({ questio
         sampleInput: "",
         sampleOutput: "",
         marks: 10,
+        testCases: [],
       },
     ]);
   };
@@ -210,6 +212,68 @@ const CodingQuestionsSection: React.FC<CodingQuestionsSectionProps> = ({ questio
                 type="number"
               />
             </div>
+            {/* Test Cases Bulk Upload */}
+            <div className="mb-4 mt-6 border-t border-[#e1e3ea] pt-4">
+              <div className="mb-4 flex items-center justify-between">
+                <h4 className="text-[16px] font-semibold text-[#111827]">
+                  Test Cases (Bulk Upload)
+                </h4>
+                <label className="flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e1e3ea] bg-white px-3 py-1.5 text-[13px] font-medium text-[#111827]">
+                  <Upload size={14} /> Upload JSON
+                  <input
+                    type="file"
+                    accept=".json"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        try {
+                          const parsed = JSON.parse(event.target?.result as string);
+                          let cases = [];
+                          if (parsed.testcases && Array.isArray(parsed.testcases)) {
+                              cases = parsed.testcases;
+                          } else if (Array.isArray(parsed)) {
+                              cases = parsed;
+                          } else {
+                              alert("Invalid JSON format.");
+                              return;
+                          }
+                          handleChange(q.id, "testCases", cases);
+                        } catch (err) {
+                          alert("Failed to parse JSON file.");
+                        }
+                      };
+                      reader.readAsText(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+
+              {(!q.testCases || q.testCases.length === 0) ? (
+                <p className="text-[13px] text-[#6b7280] italic">No test cases uploaded yet.</p>
+              ) : (
+                <div className="rounded-[8px] bg-[#f9fafb] p-3 border border-[#e1e3ea]">
+                  <p className="text-[14px] font-medium text-green-600 mb-2">
+                    ✓ {q.testCases.length} test cases uploaded and ready.
+                  </p>
+                  <div className="max-h-40 overflow-y-auto text-[12px] bg-white border p-2 rounded">
+                    <pre>{JSON.stringify(q.testCases.slice(0, 3), null, 2)}</pre>
+                    {q.testCases.length > 3 && <p className="text-gray-500 mt-1">...and {q.testCases.length - 3} more.</p>}
+                  </div>
+                  <button
+                      type="button"
+                      className="mt-2 text-[12px] text-red-500 hover:underline"
+                      onClick={() => handleChange(q.id, "testCases", [])}
+                  >
+                      Clear uploaded test cases
+                  </button>
+                </div>
+              )}
+            </div>
+
           </div>
         ))}
       </div>
@@ -295,7 +359,8 @@ const EditCoding: React.FC<EditCodingProps> = ({
               constraints: q.constraints || "",
               sampleInput: q.sample_input || q.sampleInput || "",
               sampleOutput: q.sample_output || q.sampleOutput || "",
-              marks: q.marks || 10
+              marks: q.marks || 10,
+              testCases: [] // Can't fetch bulk testcases via this endpoint easily unless provided by backend
             }));
             setQuestions(mappedQuestions);
           } else {
@@ -399,6 +464,7 @@ const EditCoding: React.FC<EditCodingProps> = ({
           };
 
           try {
+            let backendQuestionId = question.backendId;
             if (question.backendId) {
               // Update existing question
               await fetch(`${API_BASE_URL}/ind/coding/admin/questions/${question.backendId}`, {
@@ -408,14 +474,33 @@ const EditCoding: React.FC<EditCodingProps> = ({
               });
             } else {
               // Create new question
-              await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${examId}/questions`, {
+              const res = await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${examId}/questions`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(questionBody),
               });
+              if (res.ok) {
+                const data = await res.json();
+                backendQuestionId = data.id || data.question_id;
+              }
+            }
+
+            // Upload bulk testcases if available
+            if (backendQuestionId && question.testCases && question.testCases.length > 0) {
+              await fetch(`${API_BASE_URL}/ind/coding/questions/${backendQuestionId}/testcases`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                  testcases: question.testCases.map(tc => ({
+                    input_data: tc.input_data,
+                    expected_output: tc.expected_output,
+                    is_hidden: tc.is_hidden || false
+                  }))
+                })
+              });
             }
           } catch (err) {
-            console.error("Failed to save a question:", err);
+            console.error("Failed to save a question or testcases:", err);
           }
         }
 

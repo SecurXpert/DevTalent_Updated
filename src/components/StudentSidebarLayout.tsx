@@ -24,6 +24,7 @@ export default function StudentSidebarLayout({ children }: StudentSidebarLayoutP
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [studentName, setStudentName] = useState("Rahul Sharma");
+  const [subscription, setSubscription] = useState<any>(null);
 
   const [course] = useState(() => {
     return localStorage.getItem("registeredCourse") || "Technical";
@@ -69,7 +70,55 @@ export default function StudentSidebarLayout({ children }: StudentSidebarLayoutP
       }
     };
 
+    const fetchSubscription = async () => {
+      try {
+        const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+        if (!token) return;
+
+        const response = await fetch(`${API_BASE_URL}/student/subscription/current`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          let subs: any[] = [];
+          if (Array.isArray(data)) {
+            subs = data;
+          } else if (data && Array.isArray(data.items)) {
+            subs = data.items;
+          } else if (data && Array.isArray(data.data)) {
+            subs = data.data;
+          } else if (data) {
+            subs = [data];
+          }
+
+          if (subs.length > 0) {
+            const activeSubs = subs.filter((s: any) => s.status === 'active' || s.status === 'Success');
+            const targetSubs = activeSubs.length > 0 ? activeSubs : subs;
+
+            targetSubs.sort((a: any, b: any) => new Date(a.end_at).getTime() - new Date(b.end_at).getTime());
+
+            const storedPlanId = localStorage.getItem("selectedPlanId");
+            let sub = targetSubs[0];
+            if (storedPlanId) {
+              const matched = targetSubs.find((s: any) => String(s.subscription_id) === String(storedPlanId));
+              if (matched) sub = matched;
+            }
+
+            setSubscription(sub);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching subscription in sidebar:", error);
+      }
+    };
+
     fetchStudentInfo();
+    fetchSubscription();
   }, []);
 
   const isActive = (path: string) => location.pathname === path;
@@ -85,7 +134,22 @@ export default function StudentSidebarLayout({ children }: StudentSidebarLayoutP
     {
       name: "Start Exam",
       action: () => {
-        const targetCourseId = course === "Technical" ? "1" : course === "Non-Technical" ? "2" : "1";
+        let targetCourseId = "1";
+        const currentCourse = localStorage.getItem("registeredCourse") || course;
+        
+        if (subscription?.selected_courses?.length > 0) {
+          const matchedCourse = subscription.selected_courses.find((c: any) =>
+            c.course_name?.toLowerCase().includes(currentCourse.toLowerCase())
+          );
+          if (matchedCourse) {
+            targetCourseId = String(matchedCourse.course_id);
+          } else {
+            targetCourseId = String(subscription.selected_courses[0].course_id);
+          }
+        } else {
+          targetCourseId = currentCourse === "Technical" ? "1" : "2";
+        }
+        
         localStorage.setItem("selectedCourseId", targetCourseId);
         handleNavigation(`/individualterms/${targetCourseId}`);
       },

@@ -158,7 +158,9 @@ const Performance = () => {
 
   const handleSaveCourses = async () => {
     if (lockedCourses.length === maxLimit) {
-      alert("Proceeding to Exams!");
+      const targetCourseId = lockedCourses[0];
+      localStorage.setItem("selectedCourseId", String(targetCourseId));
+      navigate(`/individualterms/${targetCourseId}`);
       return;
     }
 
@@ -209,6 +211,9 @@ const Performance = () => {
         );
 
         alert("Courses successfully saved!");
+        const targetCourseId = selectedCourses[0];
+        localStorage.setItem("selectedCourseId", String(targetCourseId));
+        navigate(`/individualterms/${targetCourseId}`);
       } else {
         const errorData = await response.json();
         console.error("Save failed:", errorData);

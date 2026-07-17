@@ -114,6 +114,8 @@ const Subscriptions: React.FC = () => {
     mcqCredits: "",
     codingCredits: "",
     amount: "",
+    gstPercent: "18",
+    description: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -145,6 +147,8 @@ const Subscriptions: React.FC = () => {
       mcqCredits: "",
       codingCredits: "",
       amount: "",
+      gstPercent: "18",
+      description: "",
     });
     setErrors({});
     setEditingId(null);
@@ -163,6 +167,8 @@ const Subscriptions: React.FC = () => {
       mcqCredits: String(plan.mcqCredits),
       codingCredits: String(plan.codingCredits),
       amount: String(plan.amount),
+      gstPercent: String(plan.gst_percent ?? 18),
+      description: plan.description ?? "",
     });
     setErrors({});
     setEditingId(plan.id);

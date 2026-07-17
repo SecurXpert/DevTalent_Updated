@@ -164,11 +164,19 @@ const mockDashboardApi = async (): Promise<DashboardResponse> => {
 
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardResponse | null>(null);
+  const [dateFilter, setDateFilter] = useState("Today");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [apiErrors, setApiErrors] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(true);
   const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const handleDateFilterChange = (filterType: string, value: string) => {
+    if (filterType === "date") {
+      setDateFilter(value);
+      toast.success(`Dashboard data filtered by: ${value}`);
+    }
+  };
 
   const handleExportReport = async () => {
     if (!dashboardRef.current) return;
@@ -223,6 +231,8 @@ export default function AdminDashboard() {
         }
         
         const newApiErrors: string[] = [];
+        
+        const filterQuery = `?time_filter=${encodeURIComponent(dateFilter)}`;
 
         // Fetch completed exams count
         try {
@@ -234,7 +244,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const countRes = await fetch(`${API_BASE_URL}/ind/coding/admin/today/completed-count`, {
+          const countRes = await fetch(`${API_BASE_URL}/ind/coding/admin/today/completed-count${filterQuery}`, {
             headers,
           });
 
@@ -271,7 +281,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const studentsRes = await fetch(`${API_BASE_URL}/student/students`, {
+          const studentsRes = await fetch(`${API_BASE_URL}/student/students${filterQuery}`, {
             headers,
           });
 
@@ -348,7 +358,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const examResultsRes = await fetch(`${API_BASE_URL}/student/scorecard/admin/exam-results?limit=200`, {
+          const examResultsRes = await fetch(`${API_BASE_URL}/student/scorecard/admin/exam-results${filterQuery}&limit=200`, {
             headers,
           });
 
@@ -408,7 +418,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const mappedExamsRes = await fetch(`${API_BASE_URL}/ind/coding/admin/mapped-exams/summary`, {
+          const mappedExamsRes = await fetch(`${API_BASE_URL}/ind/coding/admin/mapped-exams/summary${filterQuery}`, {
             headers,
           });
 
@@ -448,7 +458,7 @@ export default function AdminDashboard() {
             headers['Authorization'] = `Bearer ${adminToken}`;
           }
 
-          const subsRes = await fetch(`${API_BASE_URL}/student/admin/subscriptions`, {
+          const subsRes = await fetch(`${API_BASE_URL}/student/admin/subscriptions${filterQuery}`, {
             headers,
           });
 
@@ -488,7 +498,7 @@ export default function AdminDashboard() {
     };
 
     fetchDashboard();
-  }, []);
+  }, [dateFilter]);
 
   if (loading) {
     return (
@@ -560,7 +570,7 @@ export default function AdminDashboard() {
         )}
 
         <div data-html2canvas-ignore="true">
-          <FilterModal isOpen={showFilters} />
+          <FilterModal isOpen={showFilters} onFilterChange={handleDateFilterChange} />
         </div>
       </div>
 

@@ -23,6 +23,7 @@ const StudentDashboard = () => {
   const [courseExams, setCourseExams] = useState<any[]>([]);
   const [codingExams, setCodingExams] = useState<any[]>([]);
   const [performanceMetrics, setPerformanceMetrics] = useState<any>(null);
+  const [attemptedExamIds, setAttemptedExamIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchPerformance = async () => {
@@ -71,9 +72,26 @@ const StudentDashboard = () => {
 
         let allMcqExams: any[] = [];
         let allCodingExams: any[] = [];
+        let fetchedAttemptedExamIds = new Set<number>();
 
         for (const c of subscription.selected_courses) {
           if (!c.course_id) continue;
+
+          // Fetch Scorecard Exams (to know which are attempted)
+          const scorecardRes = await fetch(`${API_BASE_URL}/student/scorecard/courses/${c.course_id}/exams`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            }
+          });
+          if (scorecardRes.ok) {
+            const data = await scorecardRes.json();
+            const attempted = Array.isArray(data) ? data : [];
+            attempted.forEach((e: any) => {
+              fetchedAttemptedExamIds.add(e.exam_id || e.id);
+            });
+          }
 
           // Fetch MCQ Exams
           const mcqResponse = await fetch(`${API_BASE_URL}/ind/mcq/student/courses/${c.course_id}/exams`, {
@@ -105,6 +123,7 @@ const StudentDashboard = () => {
         }
         setCourseExams(allMcqExams);
         setCodingExams(allCodingExams);
+        setAttemptedExamIds(fetchedAttemptedExamIds);
       } catch (error) {
         console.error("Error fetching exams:", error);
       }
@@ -214,7 +233,7 @@ const StudentDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT COLUMN */}
         <div className="lg:col-span-2 space-y-6">
-          <DashboardHeader studentName={studentName} />
+          <DashboardHeader studentName={studentName} course={course} courseExams={courseExams} codingExams={codingExams} attemptedExamIds={attemptedExamIds} subscription={subscription} />
           <PerformanceMetricsCard performanceMetrics={performanceMetrics} />
           <CoursePerformance
             course={course}

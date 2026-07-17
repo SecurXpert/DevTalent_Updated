@@ -152,8 +152,8 @@ export default function Subscription() {
         plan === "single"
           ? singlePlans.find((p) => p.exams === selectedExam)?.id
           : plan === "dual"
-          ? dualId
-          : tripleId;
+            ? dualId
+            : tripleId;
 
       if (!selectedPlanId && plan === "single" && singlePlans.length > 0) {
         selectedPlanId = singlePlans[0].id;
@@ -208,9 +208,8 @@ export default function Subscription() {
         amount: orderData.amount_paise || Math.round(total * 100),
         currency: orderData.currency || "INR",
         name: "DevTalent",
-        description: `${
-          plan.charAt(0).toUpperCase() + plan.slice(1)
-        } Course Subscription`,
+        description: `${plan.charAt(0).toUpperCase() + plan.slice(1)
+          } Course Subscription`,
         order_id:
           orderData.razorpay_order_id || orderData.order_id || orderData.id,
         prefill: { name: userName, email: userEmail },
@@ -271,7 +270,7 @@ export default function Subscription() {
             );
             alert(
               "Payment received but verification failed. Contact support with payment ID: " +
-                paymentResponse.razorpay_payment_id
+              paymentResponse.razorpay_payment_id
             );
           } finally {
             setIsProcessing(false);
@@ -289,8 +288,7 @@ export default function Subscription() {
       rzp.on("payment.failed", (failResponse: any) => {
         console.error("Payment Failed:", failResponse.error);
         alert(
-          `Payment failed: ${
-            failResponse.error?.description || "Please try again."
+          `Payment failed: ${failResponse.error?.description || "Please try again."
           }`
         );
         setIsProcessing(false);
@@ -308,8 +306,8 @@ export default function Subscription() {
     plan === "single"
       ? singlePlans.find((p) => p.exams === selectedExam)?.price || 0
       : plan === "dual"
-      ? dualPrice
-      : triplePrice;
+        ? dualPrice
+        : triplePrice;
 
   const gst = Math.round(basePrice * 0.18);
   const total = basePrice + gst;
@@ -319,8 +317,8 @@ export default function Subscription() {
     plan === "single"
       ? selectedExam
       : plan === "dual"
-      ? dualExams
-      : tripleExams;
+        ? dualExams
+        : tripleExams;
 
   const totalCourses = plan === "single" ? 1 : plan === "dual" ? 2 : 3;
 

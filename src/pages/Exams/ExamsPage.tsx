@@ -93,20 +93,29 @@ const ExamsPage: React.FC = () => {
           coursesData.map(async (course: any) => {
             let mappedExams: ExamItem[] = [];
             try {
-              const mappedRes = await fetch(`${API_BASE_URL}/ind/mcq/admin/courses/${course.id}/mapped-exams`, {
-                method: 'GET',
-                headers,
-              });
+              const [mcqRes, codingRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/ind/mcq/admin/courses/${course.id}/mapped-exams`, { headers }),
+                fetch(`${API_BASE_URL}/ind/coding/admin/courses/${course.id}/mapped-coding-exams`, { headers })
+              ]);
 
-              if (mappedRes.ok) {
-                const data = await mappedRes.json();
-                const items = data.items || [];
+              let items: any[] = [];
+              if (mcqRes.ok) {
+                const data = await mcqRes.json();
+                items = [...items, ...(data.items || [])];
+              }
+              if (codingRes.ok) {
+                const data = await codingRes.json();
+                const codingItems = Array.isArray(data) ? data : (data.items || []);
+                items = [...items, ...codingItems];
+              }
+
+              if (mcqRes.ok || codingRes.ok) {
                 mappedExams = items.map((item: any) => {
-                  const exam = item.exam || {};
+                  const exam = item.exam || item;
                   return {
                     id: exam.id,
                     title: exam.title || "Untitled Exam",
-                    type: item.exam_kind === "mcq" ? "MCQ Only" : item.exam_kind === "coding" ? "Coding Only" : (exam.type || "MCQ Only"),
+                    type: item.exam_kind === "mcq" ? "MCQ Only" : item.exam_kind === "coding" ? "Coding Only" : (exam.type || (item.exam ? "MCQ Only" : "Coding Only")),
                     questions: exam.question_count || 0,
                     duration: `${exam.duration_minutes || 60} min`,
                     enrolled: exam.enrolled_students || 0,

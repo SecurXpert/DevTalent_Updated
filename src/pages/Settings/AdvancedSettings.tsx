@@ -112,7 +112,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       </div>
 
       {/* SECURITY SETTINGS */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border shadow-sm">
+      {/* <div className="bg-white rounded-2xl p-4 sm:p-6 border shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-red-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
             <FaLock className="w-5 h-5 sm:w-6 sm:h-6 text-[#E7000B]" />
@@ -172,10 +172,10 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
             </label>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* EMAIL SETTINGS */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border shadow-sm">
+      {/* <div className="bg-white rounded-2xl p-4 sm:p-6 border shadow-sm">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-purple-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
             <FaShieldAlt className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
@@ -231,7 +231,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
             </label>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* ACTIONS */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">

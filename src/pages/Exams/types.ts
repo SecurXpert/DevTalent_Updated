@@ -43,10 +43,13 @@ export interface TestCase {
   input_data: string;
   expected_output: string;
   is_hidden: boolean;
+  weightage?: number;
+  time_limit?: number;
 }
 
 export interface CodingQuestion {
   id: number;
+  backendId?: number;
   type: "Coding";
   problemStatement: string;
   inputFormat: string;
@@ -58,6 +61,7 @@ export interface CodingQuestion {
   difficulty: string;
   timeLimit: number;
   description: string;
+  isSaved?: boolean;
   testCases?: TestCase[];
 }
 

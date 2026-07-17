@@ -210,7 +210,7 @@ const ProfileSettings: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8">
         {/* Tabs */}
         <div className="flex gap-8 border-b border-gray-100 mb-8 overflow-x-auto scrollbar-hide">
-          {["Personal Information", "Security", "Notifications", "Activity"].map((tab) => (
+          {["Personal Information", "Security", /* "Notifications", */ "Activity"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -338,7 +338,7 @@ const ProfileSettings: React.FC = () => {
           </div>
         )}
 
-        {activeTab === "Notifications" && (
+        {/* {activeTab === "Notifications" && (
           <div className="space-y-4">
             {notificationSettings.map((setting) => (
               <div
@@ -374,7 +374,7 @@ const ProfileSettings: React.FC = () => {
               </button>
             </div>
           </div>
-        )}
+        )} */}
 
         {activeTab === "Activity" && (
           <div className="space-y-4">

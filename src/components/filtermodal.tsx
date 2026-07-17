@@ -2,15 +2,17 @@ import { ChevronDown } from "lucide-react";
 
 type FilterModalProps = {
   isOpen?: boolean;
+  onFilterChange?: (filterType: string, value: string) => void;
 };
 
 type SelectFieldProps = {
   label: string;
   value: string;
   options: string[];
+  onChange?: (val: string) => void;
 };
 
-function SelectField({ label, value, options }: SelectFieldProps) {
+function SelectField({ label, value, options, onChange }: SelectFieldProps) {
   return (
     <div className="min-w-0">
       <label className="mb-3 block text-[15px] font-medium text-[#374151] sm:mb-3 sm:text-[14px] md:text-[15px] lg:text-[16px]">
@@ -20,6 +22,7 @@ function SelectField({ label, value, options }: SelectFieldProps) {
       <div className="relative">
         <select
           defaultValue={value}
+          onChange={(e) => onChange && onChange(e.target.value)}
           className="h-[36px] w-full appearance-none rounded-[8px] border border-[#d9dde5] bg-white px-4 pr-10 text-[13px] text-[#111827] outline-none sm:h-[42px] sm:text-[14px] md:h-[44px]"
         >
           {options.map((option) => (
@@ -38,7 +41,7 @@ function SelectField({ label, value, options }: SelectFieldProps) {
   );
 }
 
-export default function FilterModal({ isOpen = true }: FilterModalProps) {
+export default function FilterModal({ isOpen = true, onFilterChange }: FilterModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -57,42 +60,7 @@ export default function FilterModal({ isOpen = true }: FilterModalProps) {
               "Year",
               "Week",
             ]}
-          />
-
-          <SelectField
-            label="Course"
-            value="All Courses"
-            options={[
-              "All Courses",
-              "Computer Science",
-              "Data Science",
-              "Software Engineering",
-              "Information Technology",
-            ]}
-          />
-
-          <SelectField
-            label="Exam Type"
-            value="All Types"
-            options={[
-              "All Types",
-              "Quiz",
-              "Mid Term",
-              "Final Exam",
-              "Assignment",
-            ]}
-          />
-
-          <SelectField
-            label="Status"
-            value="All Status"
-            options={[
-              "All Status",
-              "Scheduled",
-              "Active",
-              "Completed",
-              "Cancelled",
-            ]}
+            onChange={(val) => onFilterChange && onFilterChange("date", val)}
           />
         </div>
       </div>

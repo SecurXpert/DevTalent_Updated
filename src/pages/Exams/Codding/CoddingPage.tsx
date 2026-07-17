@@ -456,32 +456,22 @@ const CodingPage: React.FC = () => {
               difficulty: question.difficulty || "easy",
               time_limit: Math.floor((question.timeLimit || 120) / 60), // Convert seconds to minutes
               memory_limit: 256, // Default memory limit
+              testcases: (question.testCases || []).map(tc => ({
+                  input_data: tc.input_data,
+                  expected_output: tc.expected_output,
+                  is_hidden: tc.is_hidden || false
+              }))
             };
 
             try {
-              const res = await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${newExamId}/questions`, {
+              const res = await fetch(`${API_BASE_URL}/ind/coding/exams/${newExamId}/question-with-testcases`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(questionBody),
               });
               
-              if (res.ok && question.testCases && question.testCases.length > 0) {
-                  const data = await res.json();
-                  const questionId = data.id || data.question_id;
-                  
-                  if (questionId) {
-                      await fetch(`${API_BASE_URL}/ind/coding/questions/${questionId}/testcases`, {
-                          method: 'POST',
-                          headers,
-                          body: JSON.stringify({
-                              testcases: question.testCases.map(tc => ({
-                                  input_data: tc.input_data,
-                                  expected_output: tc.expected_output,
-                                  is_hidden: tc.is_hidden || false
-                              }))
-                          })
-                      });
-                  }
+              if (!res.ok) {
+                console.error("Failed to add question-with-testcases", await res.text());
               }
             } catch (err) {
               console.error("Failed to add question:", err);
@@ -657,11 +647,16 @@ const CodingPage: React.FC = () => {
         difficulty: question.difficulty || "easy",
         time_limit: Math.floor((question.timeLimit || 120) / 60), // Convert seconds to minutes
         memory_limit: 256, // Default memory limit
+        testcases: (question.testCases || []).map(tc => ({
+            input_data: tc.input_data,
+            expected_output: tc.expected_output,
+            is_hidden: tc.is_hidden || false
+        }))
       };
 
       console.log('Sending question creation request:', requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${examId}/questions`, {
+      const response = await fetch(`${API_BASE_URL}/ind/coding/exams/${examId}/question-with-testcases`, {
         method: 'POST',
         headers,
         body: JSON.stringify(requestBody),
@@ -672,21 +667,6 @@ const CodingPage: React.FC = () => {
       }
 
       const questionData = await response.json();
-      const questionId = questionData.id || questionData.question_id;
-
-      if (questionId && question.testCases && question.testCases.length > 0) {
-          await fetch(`${API_BASE_URL}/ind/coding/questions/${questionId}/testcases`, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify({
-                  testcases: question.testCases.map(tc => ({
-                      input_data: tc.input_data,
-                      expected_output: tc.expected_output,
-                      is_hidden: tc.is_hidden || false
-                  }))
-              })
-          });
-      }
 
       // Update local state to mark this question as saved
       setQuestions((prev) =>

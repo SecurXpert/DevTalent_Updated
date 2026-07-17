@@ -5,303 +5,9 @@ import { API_BASE_URL } from "@/pages/Services/api/api";
 import InputField from "../Shared/InputField";
 import TextAreaField from "../Shared/TextAreaField";
 import SelectField from "../Shared/SelectField";
+import { CodingQuestion, FormErrors } from "../types";
+import CodingQuestionsList from "./Components/CodingQuestionsList";
 
-interface QuestionType {
-  id: number | string;
-  backendId?: number;
-  problem: string;
-  input: string;
-  output: string;
-  constraints: string;
-  sampleInput: string;
-  sampleOutput: string;
-  marks: number;
-  testCases?: { input_data: string; expected_output: string; is_hidden?: boolean }[];
-}
-
-interface CodingQuestionsSectionProps {
-  questions: QuestionType[];
-  setQuestions: React.Dispatch<React.SetStateAction<QuestionType[]>>;
-}
-
-const CodingQuestionsSection: React.FC<CodingQuestionsSectionProps> = ({ questions, setQuestions }) => {
-
-
-  const addQuestion = () => {
-    setQuestions((prev) => [
-      ...prev,
-      {
-        id: Date.now(), // Use Date.now() for unique frontend ID
-        problem: "",
-        input: "",
-        output: "",
-        constraints: "",
-        sampleInput: "",
-        sampleOutput: "",
-        marks: 10,
-        testCases: [],
-      },
-    ]);
-  };
-
-  const removeQuestion = async (id: number | string) => {
-    const questionToRemove = questions.find(q => q.id === id);
-    
-    // If it exists in backend, make API call to delete
-    if (questionToRemove && questionToRemove.backendId) {
-      if (!window.confirm("Are you sure you want to delete this question? This action cannot be undone.")) {
-        return; // Cancel deletion
-      }
-      
-      try {
-        const adminToken = localStorage.getItem('adminToken');
-        const headers: Record<string, string> = {};
-        if (adminToken) headers['Authorization'] = `Bearer ${adminToken}`;
-        
-        const response = await fetch(`${API_BASE_URL}/ind/coding/admin/questions/${questionToRemove.backendId}`, {
-          method: 'DELETE',
-          headers
-        });
-        
-        if (!response.ok) {
-          throw new Error("Delete request failed");
-        }
-      } catch (err) {
-        console.error("Failed to delete question:", err);
-        alert("Failed to delete the question from the server.");
-        return; // Don't remove locally if it failed
-      }
-    }
-
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-  };
-
-  const handleChange = (id: number | string, field: string, value: string | number) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)),
-    );
-  };
-
-  return (
-    <div className="space-y-5">
-      {/* Coding Questions */}
-      <div className="rounded-[16px] border border-[#e1e3ea] bg-white p-4 sm:p-5">
-        {/* Header */}
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-[22px] font-semibold text-[#1f2937]">
-            Coding Questions
-          </h2>
-
-          <div className="flex gap-3">
-            <button
-              className="flex h-[46px] items-center gap-2 rounded-[12px] px-5 text-[14px] font-medium text-white shadow-lg"
-              style={{
-                background: "white",
-                color: "#1f2937",
-                border: "1px solid #e1e3ea",
-              }}
-            >
-              <Upload className="w-4 h-4" />
-              Bulk Upload
-            </button>
-
-            <button
-              onClick={addQuestion}
-              className="flex h-[46px] items-center gap-2 rounded-[12px] px-5 text-[14px] font-medium text-white shadow-lg"
-              style={{
-                background: "linear-gradient(90deg, #4F39F6 0%, #9810FA 100%)",
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              Add Coding Question
-            </button>
-          </div>
-        </div>
-
-        {/* Questions */}
-        {questions.map((q, index) => (
-          <div
-            key={q.id}
-            className="rounded-[14px] border border-[#dde1ea] bg-white p-4 mb-5"
-          >
-            {/* Top row */}
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full bg-[#eef0ff] px-3 py-1 text-[13px] font-semibold text-[#5865f2]">
-                  Question {index + 1}
-                </span>
-                <span className="rounded-full bg-[#f2f4f8] px-3 py-1 text-[13px] text-[#374151]">
-                  Coding
-                </span>
-                <span className="text-[13px] text-[#6b7280]">
-                  {q.marks} marks
-                </span>
-              </div>
-
-              <Trash2
-                className="w-5 h-5 text-red-500 cursor-pointer"
-                onClick={() => removeQuestion(q.id)}
-              />
-            </div>
-
-            {/* Problem */}
-            <div className="mb-4">
-              <TextAreaField
-                label="Problem Statement"
-                value={q.problem}
-                onChange={(value) => handleChange(q.id, "problem", value)}
-                placeholder="Describe the coding problem..."
-                rows={3}
-              />
-            </div>
-
-            {/* Input & Output */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-4">
-              <TextAreaField
-                label="Input Format"
-                value={q.input}
-                onChange={(value) => handleChange(q.id, "input", value)}
-                placeholder="Describe input format..."
-                rows={2}
-              />
-              <TextAreaField
-                label="Output Format"
-                value={q.output}
-                onChange={(value) => handleChange(q.id, "output", value)}
-                placeholder="Describe output format..."
-                rows={2}
-              />
-            </div>
-
-            {/* Constraints */}
-            <div className="mb-4">
-              <InputField
-                label="Constraints"
-                value={q.constraints}
-                onChange={(value) => handleChange(q.id, "constraints", value)}
-                placeholder="e.g., 1 <= N <= 10^5"
-              />
-            </div>
-
-            {/* Sample Input & Output */}
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-4">
-              <TextAreaField
-                label="Sample Input"
-                value={q.sampleInput}
-                onChange={(value) => handleChange(q.id, "sampleInput", value)}
-                placeholder="Sample input..."
-                rows={2}
-              />
-              <TextAreaField
-                label="Sample Output"
-                value={q.sampleOutput}
-                onChange={(value) => handleChange(q.id, "sampleOutput", value)}
-                placeholder="Sample output..."
-                rows={2}
-              />
-            </div>
-
-            {/* Marks */}
-            <div className="max-w-[160px]">
-              <InputField
-                label="Marks"
-                value={q.marks.toString()}
-                onChange={(value) =>
-                  handleChange(q.id, "marks", Number(value || 0))
-                }
-                type="number"
-              />
-            </div>
-            {/* Test Cases Bulk Upload */}
-            <div className="mb-4 mt-6 border-t border-[#e1e3ea] pt-4">
-              <div className="mb-4 flex items-center justify-between">
-                <h4 className="text-[16px] font-semibold text-[#111827]">
-                  Test Cases (Bulk Upload)
-                </h4>
-                <label className="flex cursor-pointer items-center gap-1 rounded-[8px] border border-[#e1e3ea] bg-white px-3 py-1.5 text-[13px] font-medium text-[#111827]">
-                  <Upload size={14} /> Upload JSON
-                  <input
-                    type="file"
-                    accept=".json"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = (event) => {
-                        try {
-                          const parsed = JSON.parse(event.target?.result as string);
-                          let cases = [];
-                          if (parsed.testcases && Array.isArray(parsed.testcases)) {
-                              cases = parsed.testcases;
-                          } else if (Array.isArray(parsed)) {
-                              cases = parsed;
-                          } else {
-                              alert("Invalid JSON format.");
-                              return;
-                          }
-                          handleChange(q.id, "testCases", cases);
-                        } catch (err) {
-                          alert("Failed to parse JSON file.");
-                        }
-                      };
-                      reader.readAsText(file);
-                      e.target.value = "";
-                    }}
-                  />
-                </label>
-              </div>
-
-              {(!q.testCases || q.testCases.length === 0) ? (
-                <p className="text-[13px] text-[#6b7280] italic">No test cases uploaded yet.</p>
-              ) : (
-                <div className="rounded-[8px] bg-[#f9fafb] p-3 border border-[#e1e3ea]">
-                  <p className="text-[14px] font-medium text-green-600 mb-2">
-                    ✓ {q.testCases.length} test cases uploaded and ready.
-                  </p>
-                  <div className="max-h-40 overflow-y-auto text-[12px] bg-white border p-2 rounded">
-                    <pre>{JSON.stringify(q.testCases.slice(0, 3), null, 2)}</pre>
-                    {q.testCases.length > 3 && <p className="text-gray-500 mt-1">...and {q.testCases.length - 3} more.</p>}
-                  </div>
-                  <button
-                      type="button"
-                      className="mt-2 text-[12px] text-red-500 hover:underline"
-                      onClick={() => handleChange(q.id, "testCases", [])}
-                  >
-                      Clear uploaded test cases
-                  </button>
-                </div>
-              )}
-            </div>
-
-          </div>
-        ))}
-      </div>
-
-      {/* Supported Course Types */}
-      <div className="rounded-[16px] border border-[#e1e3ea] bg-white p-4 sm:p-5">
-        <h2 className="text-[22px] font-semibold text-[#1f2937] mb-6">
-          Supported Course Types
-        </h2>
-
-        <div className="flex flex-wrap gap-10">
-          {["Python", "Java", "C++", "JavaScript"].map((course) => (
-            <label
-              key={course}
-              className="flex items-center gap-3 text-[#374151] cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                className="w-5 h-5 rounded-md border-[#d1d5db] accent-blue-600"
-              />
-              <span className="text-[14px] font-medium">{course}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 interface EditCodingProps {
   examData?: any;
@@ -318,7 +24,8 @@ const EditCoding: React.FC<EditCodingProps> = ({
   // Get exam data from either props or navigation state
   const examData = propExamData || location.state?.examData;
 
-  const [questions, setQuestions] = useState<QuestionType[]>([]);
+  const [questions, setQuestions] = useState<CodingQuestion[]>([]);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const [formData, setFormData] = useState({
     examName: examData?.title || examData?.examName || "",
@@ -353,27 +60,36 @@ const EditCoding: React.FC<EditCodingProps> = ({
             const mappedQuestions = fetchedQuestions.map((q: any) => ({
               id: q.id,
               backendId: q.id,
-              problem: q.problem_description || q.problem || "",
-              input: q.input_format || q.input || "",
-              output: q.output_format || q.output || "",
+              type: "Coding",
+              problemStatement: q.problem_description || q.problem || "",
+              inputFormat: q.input_format || q.input || "",
+              outputFormat: q.output_format || q.output || "",
               constraints: q.constraints || "",
               sampleInput: q.sample_input || q.sampleInput || "",
               sampleOutput: q.sample_output || q.sampleOutput || "",
               marks: q.marks || 10,
-              testCases: [] // Can't fetch bulk testcases via this endpoint easily unless provided by backend
+              difficulty: q.difficulty || "medium",
+              timeLimit: (q.time_limit || 2) * 60,
+              description: q.title || "Coding Question",
+              isSaved: true,
+              testCases: []
             }));
             setQuestions(mappedQuestions);
           } else {
             // Add a default empty question if none exist
             setQuestions([{
               id: Date.now(),
-              problem: "",
-              input: "",
-              output: "",
+              type: "Coding",
+              problemStatement: "",
+              inputFormat: "",
+              outputFormat: "",
               constraints: "",
               sampleInput: "",
               sampleOutput: "",
               marks: 10,
+              difficulty: "easy",
+              timeLimit: 120,
+              description: ""
             }]);
           }
         }
@@ -410,6 +126,67 @@ const EditCoding: React.FC<EditCodingProps> = ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  
+  const addCodingQuestion = () => {
+    setQuestions((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "Coding",
+        problemStatement: "",
+        inputFormat: "",
+        outputFormat: "",
+        constraints: "",
+        sampleInput: "",
+        sampleOutput: "",
+        marks: 10,
+        difficulty: "easy",
+        timeLimit: 120,
+        description: "",
+      },
+    ]);
+  };
+
+  const handleRemoveQuestion = async (id: number) => {
+    const questionToRemove = questions.find(q => q.id === id);
+    if (questionToRemove && questionToRemove.backendId) {
+      if (!window.confirm("Are you sure you want to delete this question? This action cannot be undone.")) {
+        return;
+      }
+      try {
+        const adminToken = localStorage.getItem('adminToken');
+        const headers: Record<string, string> = {};
+        if (adminToken) headers['Authorization'] = `Bearer ${adminToken}`;
+        
+        const response = await fetch(`${API_BASE_URL}/ind/coding/admin/questions/${questionToRemove.backendId}`, {
+          method: 'DELETE',
+          headers
+        });
+        
+        if (!response.ok) throw new Error("Delete request failed");
+      } catch (err) {
+        console.error("Failed to delete question:", err);
+        alert("Failed to delete the question from the server.");
+        return;
+      }
+    }
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+  };
+
+  const updateCodingQuestion = (id: number, field: keyof CodingQuestion, value: any) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, [field]: value } : q))
+    );
+  };
+
+  const handleBulkUpload = () => {
+    alert("Bulk upload currently not supported in edit mode.");
+  };
+
+  const handleSaveQuestion = async (question: CodingQuestion) => {
+      alert("Individual question saving during edit mode uses 'Save Changes' below.");
   };
 
   const handleSave = async () => {
@@ -450,53 +227,64 @@ const EditCoding: React.FC<EditCodingProps> = ({
       if (response.ok) {
         // Save questions
         for (const question of questions) {
-          if (!question.problem.trim()) continue; // Skip empty questions
-
-          const questionBody = {
-            title: "Coding Question",
-            problem_description: question.problem,
-            input_format: question.input,
-            output_format: question.output,
-            constraints: question.constraints,
-            difficulty: "medium", // Default
-            time_limit: 2, // Default
-            memory_limit: 256, // Default
-          };
+          if (!question.problemStatement.trim()) continue; // Skip empty questions
 
           try {
-            let backendQuestionId = question.backendId;
             if (question.backendId) {
               // Update existing question
+              const questionBody = {
+                title: "Coding Question",
+                problem_description: question.problemStatement,
+                input_format: question.inputFormat,
+                output_format: question.outputFormat,
+                constraints: question.constraints,
+                difficulty: "medium", // Default
+                time_limit: 2, // Default
+                memory_limit: 256, // Default
+              };
+
               await fetch(`${API_BASE_URL}/ind/coding/admin/questions/${question.backendId}`, {
                 method: 'PUT',
                 headers,
                 body: JSON.stringify(questionBody),
               });
-            } else {
-              // Create new question
-              const res = await fetch(`${API_BASE_URL}/ind/coding/admin/exams/${examId}/questions`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(questionBody),
-              });
-              if (res.ok) {
-                const data = await res.json();
-                backendQuestionId = data.id || data.question_id;
-              }
-            }
 
-            // Upload bulk testcases if available
-            if (backendQuestionId && question.testCases && question.testCases.length > 0) {
-              await fetch(`${API_BASE_URL}/ind/coding/questions/${backendQuestionId}/testcases`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                  testcases: question.testCases.map(tc => ({
+              // Upload bulk testcases if available
+              if (question.testCases && question.testCases.length > 0) {
+                await fetch(`${API_BASE_URL}/ind/coding/questions/${question.backendId}/testcases`, {
+                  method: 'POST',
+                  headers,
+                  body: JSON.stringify({
+                    testcases: question.testCases.map(tc => ({
+                      input_data: tc.input_data,
+                      expected_output: tc.expected_output,
+                      is_hidden: tc.is_hidden || false
+                    }))
+                  })
+                });
+              }
+            } else {
+              // Create new question with testcases using the new unified endpoint
+              const questionWithTestcasesBody = {
+                title: "Coding Question",
+                problem_description: question.problemStatement,
+                input_format: question.inputFormat,
+                output_format: question.outputFormat,
+                constraints: question.constraints,
+                difficulty: "medium", // Default
+                time_limit: 2, // Default
+                memory_limit: 256, // Default
+                testcases: (question.testCases || []).map(tc => ({
                     input_data: tc.input_data,
                     expected_output: tc.expected_output,
                     is_hidden: tc.is_hidden || false
-                  }))
-                })
+                }))
+              };
+
+              await fetch(`${API_BASE_URL}/ind/coding/exams/${examId}/question-with-testcases`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(questionWithTestcasesBody),
               });
             }
           } catch (err) {
@@ -626,7 +414,15 @@ const EditCoding: React.FC<EditCodingProps> = ({
           </div>
 
           {/* Coding Questions Section */}
-          <CodingQuestionsSection questions={questions} setQuestions={setQuestions} />
+          <CodingQuestionsList
+            questions={questions}
+            formErrors={formErrors}
+            onAddQuestion={addCodingQuestion}
+            onBulkUpload={handleBulkUpload}
+            onUpdateQuestion={updateCodingQuestion}
+            onRemoveQuestion={handleRemoveQuestion}
+            onSaveQuestion={handleSaveQuestion}
+          />
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-y-3 sm:gap-x-3 pb-6 sm:text-left text-center">

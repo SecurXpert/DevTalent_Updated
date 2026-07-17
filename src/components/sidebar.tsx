@@ -37,7 +37,7 @@ export default function Sidebar() {
     { name: "Results", icon: BarChart3, path: "/results" },
     { name: "Subscriptions & Plans", icon: CreditCard, path: "/subscriptions" },
     { name: "Reports & Analytics", icon: PieChart, path: "/reports" },
-    { name: "Notifications", icon: Bell, path: "/notifications" },
+    // { name: "Notifications", icon: Bell, path: "/notifications" },
     ...(userRole === "super_admin"
       ? [{ name: "Admin Management", icon: Shield, path: "/admin-management" }]
       : []),
@@ -95,8 +95,8 @@ export default function Sidebar() {
         className={`fixed inset-y-0 left-0 z-50 h-screen bg-[#f8f8f8] border-r border-gray-200 transform transition-all duration-300 ease-in-out lg:relative lg:h-full lg:transform-none ${isMobileMenuOpen
           ? "translate-x-0"
           : "-translate-x-full lg:translate-x-0"
-          } ${isDesktopCollapsed 
-            ? "w-[240px] sm:w-[260px] md:w-[200px] lg:w-[80px] xl:w-[80px]" 
+          } ${isDesktopCollapsed
+            ? "w-[240px] sm:w-[260px] md:w-[200px] lg:w-[80px] xl:w-[80px]"
             : "w-[240px] sm:w-[260px] md:w-[200px] lg:w-[220px] xl:w-[240px]"
           }`}
       >
@@ -134,9 +134,8 @@ export default function Sidebar() {
                 return (
                   <button
                     key={index}
-                    className={`flex w-full items-center gap-2 sm:gap-3 md:gap-2 lg:gap-2 xl:gap-3 rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4 py-3 sm:py-3 md:py-2 lg:py-2 xl:py-3 text-left transition-all ${
-                      isActive(item.path) ? "text-white" : "text-[#3f4a5f] hover:bg-white"
-                    } ${isDesktopCollapsed ? "lg:justify-center lg:px-0" : ""}`}
+                    className={`flex w-full items-center gap-2 sm:gap-3 md:gap-2 lg:gap-2 xl:gap-3 rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4 py-3 sm:py-3 md:py-2 lg:py-2 xl:py-3 text-left transition-all ${isActive(item.path) ? "text-white" : "text-[#3f4a5f] hover:bg-white"
+                      } ${isDesktopCollapsed ? "lg:justify-center lg:px-0" : ""}`}
                     style={{
                       background: isActive(item.path)
                         ? "linear-gradient(90deg, #8020A9 0%, #3B309E 100%)"
@@ -156,25 +155,22 @@ export default function Sidebar() {
               })}
             </div>
           </nav>
-          
+
           {/* Logout Button */}
           <div className="p-3 sm:p-4 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className={`flex w-full items-center gap-2 sm:gap-3 md:gap-2 lg:gap-2 xl:gap-3 rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4 py-3 sm:py-3 md:py-2 lg:py-2 xl:py-3 text-left transition-all text-red-600 hover:bg-red-50 ${
-                isDesktopCollapsed ? "lg:justify-center lg:px-0" : ""
-              }`}
+              className={`flex w-full items-center gap-2 sm:gap-3 md:gap-2 lg:gap-2 xl:gap-3 rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-2 lg:px-3 xl:px-4 py-3 sm:py-3 md:py-2 lg:py-2 xl:py-3 text-left transition-all text-red-600 hover:bg-red-50 ${isDesktopCollapsed ? "lg:justify-center lg:px-0" : ""
+                }`}
             >
               <LogOut
-                className={`w-4 h-4 sm:w-5 sm:h-5 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 ${
-                  isDesktopCollapsed ? "lg:w-6 lg:h-6" : ""
-                }`}
+                className={`w-4 h-4 sm:w-5 sm:h-5 md:w-4 md:h-4 lg:w-5 lg:h-5 xl:w-6 xl:h-6 ${isDesktopCollapsed ? "lg:w-6 lg:h-6" : ""
+                  }`}
                 strokeWidth={2}
               />
               <span
-                className={`text-[12px] sm:text-[13px] md:text-[11px] lg:text-[12px] xl:text-[13px] font-medium ${
-                  isDesktopCollapsed ? "lg:hidden" : ""
-                }`}
+                className={`text-[12px] sm:text-[13px] md:text-[11px] lg:text-[12px] xl:text-[13px] font-medium ${isDesktopCollapsed ? "lg:hidden" : ""
+                  }`}
               >
                 Logout
               </span>

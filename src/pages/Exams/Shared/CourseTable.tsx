@@ -47,20 +47,30 @@ const CourseTable: React.FC<CourseTableProps> = ({
             headers["Authorization"] = `Bearer ${adminToken}`;
           }
 
-          const response = await fetch(
-            `${API_BASE_URL}/ind/mcq/admin/courses/${expandedCourseId}/mapped-exams`,
-            { headers }
-          );
+          const [mcqRes, codingRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/ind/mcq/admin/courses/${expandedCourseId}/mapped-exams`, { headers }),
+            fetch(`${API_BASE_URL}/ind/coding/admin/courses/${expandedCourseId}/mapped-coding-exams`, { headers })
+          ]);
 
-          if (response.ok) {
-            const data = await response.json();
-            const items = data.items || [];
+          let items: any[] = [];
+          if (mcqRes.ok) {
+            const data = await mcqRes.json();
+            items = [...items, ...(data.items || [])];
+          }
+          if (codingRes.ok) {
+            const data = await codingRes.json();
+            // Handle both {items: [...]} or direct [...] response formats
+            const codingItems = Array.isArray(data) ? data : (data.items || []);
+            items = [...items, ...codingItems];
+          }
+
+          if (mcqRes.ok || codingRes.ok) {
             const mappedExams: ExamItem[] = items.map((item: any) => {
-              const exam = item.exam || {};
+              const exam = item.exam || item;
               return {
                 id: exam.id,
                 title: exam.title || "Untitled Exam",
-                type: item.exam_kind === "mcq" ? "MCQ Only" : (exam.type || "MCQ Only"),
+                type: item.exam_kind === "mcq" ? "MCQ Only" : item.exam_kind === "coding" ? "Coding Only" : (exam.type || (item.exam ? "MCQ Only" : "Coding Only")),
                 questions: exam.question_count || 0,
                 duration: `${exam.duration_minutes || 60} min`,
                 enrolled: exam.enrolled_students || 0,

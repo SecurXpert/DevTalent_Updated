@@ -8,6 +8,8 @@ type FormState = {
   mcqCredits: string;
   codingCredits: string;
   amount: string;
+  gstPercent: string;
+  description: string;
 };
 
 type FormErrors = {
@@ -17,6 +19,8 @@ type FormErrors = {
   mcqCredits?: string;
   codingCredits?: string;
   amount?: string;
+  gstPercent?: string;
+  description?: string;
 };
 
 type BasicPlanDetailsProps = {
@@ -128,14 +132,21 @@ const BasicPlanDetails: React.FC<BasicPlanDetailsProps> = ({
             Plan Description <span className="text-red-500">*</span>
           </label>
           <textarea
+            value={form.description}
+            onChange={(e) => onInputChange("description", e.target.value)}
             placeholder="Enter description"
             rows={4}
             className={`w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 resize-none ${
-              errors.name
+              errors.description
                 ? "border-red-400 focus:border-red-500"
                 : "border-slate-300 focus:border-indigo-500"
             }`}
           />
+          {errors.description && (
+            <p className="mt-1 text-xs font-medium text-red-500">
+              {errors.description}
+            </p>
+          )}
         </div>
       </div>
     </div>

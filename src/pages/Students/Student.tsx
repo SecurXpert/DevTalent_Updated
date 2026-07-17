@@ -4,6 +4,7 @@ import { fetchStudents, deleteStudent, Student as ApiStudent } from "@/lib/api";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { API_BASE_URL } from "@/pages/Services/api/api";
 
 import {
   FiUsers,
@@ -70,6 +71,7 @@ const Page: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [filterCourse, setFilterCourse] = useState("All Courses");
   const [filterDate, setFilterDate] = useState("All Time");
+  const [certificatesEarned, setCertificatesEarned] = useState("0");
   const navigate = useNavigate();
   const pageRef = useRef<HTMLDivElement>(null);
 
@@ -153,9 +155,9 @@ const Page: React.FC = () => {
       bg: "bg-gradient-to-r from-green-500 to-emerald-600",
     },
     {
-      title: "Average Score",
-      value: "84%",
-      change: "5%",
+      title: "Certificates Earned",
+      value: certificatesEarned,
+      change: "Total Earned",
       icon: <FiTrendingUp className="text-xl sm:text-xl md:text-2xl lg:text-2xl" />,
       bg: "bg-gradient-to-r from-blue-500 to-cyan-600",
     },
@@ -168,14 +170,36 @@ const Page: React.FC = () => {
     },
   ];
 
-  // Fetch student list on mount
+  // Fetch student list and certificate stats on mount
   useEffect(() => {
     (async () => {
       try {
-        const data = await fetchStudents();
-        setStudents(Array.isArray(data) ? data : []);
+        const [studentsData, certResponse] = await Promise.all([
+          fetchStudents().catch((e) => {
+            console.error("Failed to load students", e);
+            return [];
+          }),
+          fetch(`${API_BASE_URL}/student/scorecard/admin/courses/performance?limit=200`, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            }
+          }).catch((e) => {
+            console.error("Failed to load certificate stats", e);
+            return null;
+          })
+        ]);
+
+        setStudents(Array.isArray(studentsData) ? studentsData : []);
+
+        if (certResponse && certResponse.ok) {
+          const certData = await certResponse.json();
+          if (certData && typeof certData.eligible_for_certificate_count === "number") {
+            setCertificatesEarned(String(certData.eligible_for_certificate_count));
+          }
+        }
       } catch (e) {
-        console.error("Failed to load students", e);
+        console.error("Failed to load dashboard data", e);
       } finally {
         setLoading(false);
       }

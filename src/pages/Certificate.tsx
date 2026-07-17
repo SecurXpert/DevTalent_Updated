@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import {
   ChevronRight,
@@ -12,6 +13,7 @@ import {
   Trophy,
   ArrowLeft,
 } from "lucide-react";
+import { API_BASE_URL } from "@/pages/Services/api/api";
 
 interface Level {
   id: string;
@@ -39,152 +41,375 @@ interface Level {
   issueDate?: string;
 
   benefits: string[];
+
+  course_id?: number;
+
+  certificate_url?: string;
+
+  certificateDbId?: number;
 }
+
+const INITIAL_LEVELS: Level[] = [
+  {
+    id: "L1",
+
+    title: "L1",
+
+    subtitle: "Beginner",
+
+    exams: "2/2 exams",
+
+    status: "unlocked",
+
+    icon: CheckCircle,
+
+    color: "",
+
+    headerBg: "bg-gradient-to-r from-green-500 to-emerald-600",
+
+    name: "Level 1",
+
+    subName: "Basic Certification",
+
+    certificateId: "CERT-L1-2024-001",
+
+    issueDate: "14/02/2026",
+
+    course_id: 1,
+
+    certificate_url: "",
+
+    benefits: [
+      "Foundation level certification",
+
+      "Basic skill validation",
+
+      "Entry-level recognition",
+    ],
+  },
+
+  {
+    id: "L2",
+
+    title: "L2",
+
+    subtitle: "Intermediate",
+
+    exams: "4/4 exams",
+
+    status: "unlocked",
+
+    icon: Star,
+
+    color: "",
+
+    headerBg: "bg-gradient-to-r from-blue-500 to-indigo-600",
+
+    name: "Level 2",
+
+    subName: "Intermediate Certification",
+
+    certificateId: "CERT-L2-2024-001",
+
+    issueDate: "14/02/2026",
+
+    course_id: 2,
+
+    certificate_url: "",
+
+    benefits: [
+      "Intermediate certification",
+
+      "Enhanced credibility",
+
+      "Industry recognition",
+    ],
+  },
+
+  {
+    id: "L3",
+
+    title: "L3",
+
+    subtitle: "Mid",
+
+    exams: "6/6 exams",
+
+    status: "unlocked",
+
+    icon: Trophy,
+
+    color: "",
+
+    headerBg: "bg-gradient-to-r from-orange-500 to-red-500",
+
+    name: "Level 3",
+
+    subName: "Mid Certification",
+
+    certificateId: "CERT-L3-2024-001",
+
+    issueDate: "14/02/2026",
+
+    course_id: 3,
+
+    certificate_url: "",
+
+    benefits: [
+      "Advanced technical validation",
+
+      "Leadership credibility",
+
+      "Professional recognition",
+    ],
+  },
+
+  {
+    id: "L4",
+
+    title: "L4",
+
+    subtitle: "Advanced",
+
+    exams: "",
+
+    status: "locked",
+
+    icon: Lock,
+
+    color: "bg-gray-300",
+
+    headerBg: "bg-gradient-to-r from-yellow-400 to-amber-600",
+
+    name: "Level 4",
+
+    subName: "Advanced Certification",
+
+    course_id: 4,
+
+    certificate_url: "",
+
+    benefits: [
+      "Elite certification status",
+
+      "Premium industry access",
+
+      "Advanced expertise recognition",
+    ],
+  },
+];
 
 const Certificate: React.FC = () => {
   const navigate = useNavigate();
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
+  const [generatingLevelId, setGeneratingLevelId] = useState<string | null>(null);
 
-  const levels: Level[] = [
-    {
-      id: "L1",
+  const [levels, setLevels] = useState<Level[]>(INITIAL_LEVELS);
 
-      title: "L1",
+  useEffect(() => {
+    const fetchExistingCertificates = async () => {
+      const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+      if (!token) return;
 
-      subtitle: "Beginner",
+      const updatedLevels = await Promise.all(
+        INITIAL_LEVELS.map(async (level) => {
+          if (!level.course_id) return level;
+          try {
+            const response = await fetch(
+              `${API_BASE_URL}/student/scorecard/courses/${level.course_id}/certificate`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+              }
+            );
 
-      exams: "2/2 exams",
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.certificate_url) {
+                return {
+                  ...level,
+                  certificate_url: data.certificate_url,
+                  certificateId: data.certificate_no || level.certificateId,
+                  certificateDbId: data.id,
+                  issueDate: data.issued_at
+                    ? new Date(data.issued_at).toLocaleDateString("en-GB")
+                    : level.issueDate,
+                };
+              }
+            }
+          } catch (e) {
+            console.warn(`Could not fetch certificate for course ${level.course_id}:`, e);
+          }
+          return level;
+        })
+      );
 
-      status: "unlocked",
+      setLevels(updatedLevels);
+    };
 
-      icon: CheckCircle,
+    fetchExistingCertificates();
+  }, []);
 
-      color: "",
+  const generateCertificate = async (level: Level): Promise<{ url: string; id: number; certificateNo: string } | null> => {
+    if (!level.course_id) return null;
+    
+    setGeneratingLevelId(level.id);
+    try {
+      const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+      if (!token) {
+        toast.error("Please login first");
+        return null;
+      }
 
-      headerBg: "bg-gradient-to-r from-green-500 to-emerald-600",
+      const response = await fetch(
+        `${API_BASE_URL}/student/scorecard/courses/${level.course_id}/certificate/generate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
 
-      name: "Level 1",
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Certificate generated successfully for ${level.name || level.title}!`);
+        console.log("Certificate generated:", data);
+        
+        const certUrl = data.certificate_url || "";
+        const certNo = data.certificate_no || level.certificateId || "";
+        const certDbId = data.id;
+        const issuedAtStr = data.issued_at 
+          ? new Date(data.issued_at).toLocaleDateString("en-GB") 
+          : level.issueDate || new Date().toLocaleDateString("en-GB");
 
-      subName: "Basic Certification",
+        setLevels(prevLevels =>
+          prevLevels.map(l =>
+            l.id === level.id
+              ? {
+                  ...l,
+                  certificate_url: certUrl,
+                  certificateId: certNo,
+                  certificateDbId: certDbId,
+                  issueDate: issuedAtStr,
+                }
+              : l
+          )
+        );
 
-      certificateId: "CERT-L1-2024-001",
-
-      issueDate: "14/02/2026",
-
-      benefits: [
-        "Foundation level certification",
-
-        "Basic skill validation",
-
-        "Entry-level recognition",
-      ],
-    },
-
-    {
-      id: "L2",
-
-      title: "L2",
-
-      subtitle: "Intermediate",
-
-      exams: "4/4 exams",
-
-      status: "unlocked",
-
-      icon: Star,
-
-      color: "",
-
-      headerBg: "bg-gradient-to-r from-blue-500 to-indigo-600",
-
-      name: "Level 2",
-
-      subName: "Intermediate Certification",
-
-      certificateId: "CERT-L2-2024-001",
-
-      issueDate: "14/02/2026",
-
-      benefits: [
-        "Intermediate certification",
-
-        "Enhanced credibility",
-
-        "Industry recognition",
-      ],
-    },
-
-    {
-      id: "L3",
-
-      title: "L3",
-
-      subtitle: "Mid",
-
-      exams: "6/6 exams",
-
-      status: "unlocked",
-
-      icon: Trophy,
-
-      color: "",
-
-      headerBg: "bg-gradient-to-r from-orange-500 to-red-500",
-
-      name: "Level 3",
-
-      subName: "Mid Certification",
-
-      certificateId: "CERT-L3-2024-001",
-
-      issueDate: "14/02/2026",
-
-      benefits: [
-        "Advanced technical validation",
-
-        "Leadership credibility",
-
-        "Professional recognition",
-      ],
-    },
-
-    {
-      id: "L4",
-
-      title: "L4",
-
-      subtitle: "Advanced",
-
-      exams: "",
-
-      status: "locked",
-
-      icon: Lock,
-
-      color: "bg-gray-300",
-
-      headerBg: "bg-gradient-to-r from-yellow-400 to-amber-600",
-
-      name: "Level 4",
-
-      subName: "Advanced Certification",
-
-      benefits: [
-        "Elite certification status",
-
-        "Premium industry access",
-
-        "Advanced expertise recognition",
-      ],
-    },
-  ];
-
-  const handleViewCertificate = (level: Level): void => {
-    console.log(`Viewing certificate for ${level.name}`);
+        return { url: certUrl, id: certDbId, certificateNo: certNo };
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        let errorMessage = "Failed to generate certificate";
+        if (typeof errData.detail === "string") {
+          errorMessage = errData.detail;
+        } else if (Array.isArray(errData.detail) && errData.detail.length > 0) {
+          errorMessage = errData.detail[0].msg || errorMessage;
+        } else if (errData.message) {
+          errorMessage = errData.message;
+        }
+        toast.error(errorMessage);
+        console.error("Certificate generation error:", errData);
+        return null;
+      }
+    } catch (error) {
+      console.error("Error generating certificate:", error);
+      toast.error("Failed to generate certificate. Please try again.");
+      return null;
+    } finally {
+      setGeneratingLevelId(null);
+    }
   };
 
-  const handleDownloadCertificate = (level: Level): void => {
-    console.log(`Downloading certificate for ${level.name}`);
+  const handleViewCertificate = async (level: Level): Promise<void> => {
+    console.log(`Viewing certificate for ${level.name || level.title}`);
+    let certificateNo = level.certificateId;
+
+    if (!certificateNo) {
+      const res = await generateCertificate(level);
+      if (res) {
+        certificateNo = res.certificateNo;
+      }
+    }
+
+    if (!certificateNo) {
+      toast.error("Could not retrieve certificate number for verification.");
+      return;
+    }
+
+    window.open(`${API_BASE_URL}/student/scorecard/verify/${certificateNo}`, "_blank");
+  };
+
+  const handleDownloadCertificate = async (level: Level): Promise<void> => {
+    console.log(`Downloading certificate for ${level.name || level.title}`);
+    let certificateDbId = level.certificateDbId;
+
+    if (!certificateDbId) {
+      const res = await generateCertificate(level);
+      if (res) {
+        certificateDbId = res.id;
+      }
+    }
+
+    if (!certificateDbId) {
+      toast.error("Could not retrieve certificate ID for download.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
+      if (!token) {
+        toast.error("Please login first");
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/student/scorecard/download/${certificateDbId}`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const downloadUrl = await response.json();
+          if (downloadUrl && typeof downloadUrl === "string") {
+            const link = document.createElement("a");
+            link.href = downloadUrl;
+            link.setAttribute("download", `Certificate_${level.title || "Level"}.pdf`);
+            link.setAttribute("target", "_blank");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          } else {
+            toast.error("Failed to parse download link.");
+          }
+        } else {
+          const blob = await response.blob();
+          const blobUrl = window.URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.setAttribute("download", `Certificate_${level.title || "Level"}.pdf`);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+        }
+      } else {
+        toast.error("Failed to download certificate from server.");
+      }
+    } catch (error) {
+      console.error("Error downloading certificate:", error);
+      toast.error("Failed to download certificate. Please try again.");
+    }
   };
 
   const handleUpgrade = (): void => {
@@ -375,24 +600,30 @@ const Certificate: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-
                             handleViewCertificate(level);
                           }}
-                          className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center"
+                          disabled={generatingLevelId === level.id}
+                          className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-purple-700 transition-colors duration-200 flex items-center justify-center disabled:opacity-50"
                         >
-                          View
-                          <ChevronRight className="w-4 h-4 ml-1" />
+                          {generatingLevelId === level.id ? "Generating..." : "View"}
+                          {generatingLevelId !== level.id && <ChevronRight className="w-4 h-4 ml-1" />}
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-
                             handleDownloadCertificate(level);
                           }}
-                          className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center"
+                          disabled={generatingLevelId === level.id}
+                          className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center disabled:opacity-50"
                         >
-                          <Download className="w-4 h-4 mr-2" />
-                          Download
+                          {generatingLevelId === level.id ? (
+                            "Generating..."
+                          ) : (
+                            <>
+                              <Download className="w-4 h-4 mr-2" />
+                              Download
+                            </>
+                          )}
                         </button>
                       </>
                     ) : (

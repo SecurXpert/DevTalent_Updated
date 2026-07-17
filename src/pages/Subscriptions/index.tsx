@@ -67,7 +67,7 @@ const Subscriptions: React.FC = () => {
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [plans, setPlans] = useState<PlanItem[]>([]);
   const [loadingPlans, setLoadingPlans] = useState(false);
-  
+
   const [activeSubscriptions, setActiveSubscriptions] = useState<ActiveSubscriptionItem[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
   const [subscriptionSummary, setSubscriptionSummary] = useState({
@@ -114,6 +114,8 @@ const Subscriptions: React.FC = () => {
     mcqCredits: "",
     codingCredits: "",
     amount: "",
+    gstPercent: "18",
+    description: "",
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -133,8 +135,8 @@ const Subscriptions: React.FC = () => {
   const totalPlans = plans.length;
   const activePlans = plans.filter((p) => p.is_active).length;
   const inactivePlans = plans.filter((p) => !p.is_active).length;
-  const avgPlanAmount = plans.length > 0 
-    ? (plans.reduce((sum, p) => sum + p.amount, 0) / plans.length).toFixed(2) 
+  const avgPlanAmount = plans.length > 0
+    ? (plans.reduce((sum, p) => sum + p.amount, 0) / plans.length).toFixed(2)
     : "0.00";
 
   const resetForm = () => {
@@ -145,6 +147,8 @@ const Subscriptions: React.FC = () => {
       mcqCredits: "",
       codingCredits: "",
       amount: "",
+      gstPercent: "18",
+      description: "",
     });
     setErrors({});
     setEditingId(null);
@@ -163,6 +167,8 @@ const Subscriptions: React.FC = () => {
       mcqCredits: String(plan.mcqCredits),
       codingCredits: String(plan.codingCredits),
       amount: String(plan.amount),
+      gstPercent: String(plan.gst_percent ?? 18),
+      description: plan.description ?? "",
     });
     setErrors({});
     setEditingId(plan.id);
@@ -374,18 +380,18 @@ const Subscriptions: React.FC = () => {
         const plansData = await response.json();
         // Transform API data to match PlanItem structure
         const itemsArray = Array.isArray(plansData) ? plansData : (plansData.items || []);
-        
+
         const transformedPlans: PlanItem[] = itemsArray.map((plan: any, index: number) => ({
-            id: plan.id || Date.now() + index,
-            name: plan.plan_name || plan.name || `Plan ${index + 1}`,
-            planType: plan.plan_type || plan.planType || 'Standard',
-            courseLimit: plan.course_limit || 0,
-            mcqCredits: plan.mcq_credit_total || 0,
-            codingCredits: plan.coding_credit_total || 0,
-            amount: plan.amount || 0,
-            gst_percent: plan.gst_percent || 18,
-            description: plan.description || '',
-            is_active: plan.is_active !== undefined ? plan.is_active : true,
+          id: plan.id || Date.now() + index,
+          name: plan.plan_name || plan.name || `Plan ${index + 1}`,
+          planType: plan.plan_type || plan.planType || 'Standard',
+          courseLimit: plan.course_limit || 0,
+          mcqCredits: plan.mcq_credit_total || 0,
+          codingCredits: plan.coding_credit_total || 0,
+          amount: plan.amount || 0,
+          gst_percent: plan.gst_percent || 18,
+          description: plan.description || '',
+          is_active: plan.is_active !== undefined ? plan.is_active : true,
         }));
 
         setPlans(transformedPlans);
@@ -428,7 +434,7 @@ const Subscriptions: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        
+
         if (data.summary) {
           setSubscriptionSummary({
             total_subscriptions: data.summary.total_subscriptions || 0,
@@ -437,19 +443,19 @@ const Subscriptions: React.FC = () => {
             total_revenue: data.summary.total_revenue || 0,
           });
         }
-        
+
         const itemsArray = Array.isArray(data) ? data : (data.items || []);
-        
+
         const transformedSubscriptions: ActiveSubscriptionItem[] = itemsArray.map((sub: any, index: number) => ({
-            id: sub.subscription_id || Date.now() + index,
-            institution: sub.student_name || 'Unknown',
-            planType: sub.plan_name || 'Unknown',
-            startDate: sub.start_at ? sub.start_at.split('T')[0] : '',
-            endDate: sub.end_at ? sub.end_at.split('T')[0] : '',
-            status: sub.subscription_status === 'active' ? 'Active' : sub.subscription_status === 'expired' ? 'Expired' : (sub.subscription_status || 'Pending'),
-            amount: sub.payment_amount || 0,
-            mcqRemaining: sub.mcq_remaining || 0,
-            codingRemaining: sub.coding_remaining || 0,
+          id: sub.subscription_id || Date.now() + index,
+          institution: sub.student_name || 'Unknown',
+          planType: sub.plan_name || 'Unknown',
+          startDate: sub.start_at ? sub.start_at.split('T')[0] : '',
+          endDate: sub.end_at ? sub.end_at.split('T')[0] : '',
+          status: sub.subscription_status === 'active' ? 'Active' : sub.subscription_status === 'expired' ? 'Expired' : (sub.subscription_status || 'Pending'),
+          amount: sub.payment_amount || 0,
+          mcqRemaining: sub.mcq_remaining || 0,
+          codingRemaining: sub.coding_remaining || 0,
         }));
 
         setActiveSubscriptions(transformedSubscriptions);

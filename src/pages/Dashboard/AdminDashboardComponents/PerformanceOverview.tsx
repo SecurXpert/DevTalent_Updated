@@ -15,11 +15,25 @@ import { Card, SectionTitle } from "./SharedUI";
 
 export function PerformanceOverview({ 
   performanceData, 
+  summary,
   children 
 }: { 
   performanceData: any[];
+  summary?: {
+    passRate: number;
+    avgScore: number;
+    participation: number;
+    completionRate: number;
+  };
   children?: React.ReactNode;
 }) {
+  const {
+    passRate = 87.5,
+    avgScore = 81.2,
+    participation = 92.3,
+    completionRate = 94.8
+  } = summary || {};
+
   return (
     <>
       <div className="mt-3 sm:mt-4 laptop:mt-5 grid grid-cols-2 gap-3 sm:gap-4 laptop:grid-cols-2 xl:grid-cols-4">
@@ -41,7 +55,7 @@ export function PerformanceOverview({
             Pass Rate
           </p>
           <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            87.5%
+            {passRate.toFixed(1)}%
           </h3>
         </Card>
 
@@ -63,7 +77,7 @@ export function PerformanceOverview({
             Avg. Score
           </p>
           <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            81.2%
+            {avgScore.toFixed(1)}%
           </h3>
         </Card>
 
@@ -85,7 +99,7 @@ export function PerformanceOverview({
             Participation
           </p>
           <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            92.3%
+            {participation.toFixed(1)}%
           </h3>
         </Card>
 
@@ -107,7 +121,7 @@ export function PerformanceOverview({
             Completion Rate
           </p>
           <h3 className="mt-1 text-[12px] sm:text-[14px] laptop:text-[10px] xl:text-[18px] font-bold text-[#172033]">
-            94.8%
+            {completionRate.toFixed(1)}%
           </h3>
         </Card>
       </div>

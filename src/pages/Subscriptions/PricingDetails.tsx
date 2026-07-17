@@ -8,6 +8,8 @@ type FormState = {
   mcqCredits: string;
   codingCredits: string;
   amount: string;
+  gstPercent: string;
+  description: string;
 };
 
 type FormErrors = {
@@ -17,6 +19,8 @@ type FormErrors = {
   mcqCredits?: string;
   codingCredits?: string;
   amount?: string;
+  gstPercent?: string;
+  description?: string;
 };
 
 type PricingDetailsProps = {
@@ -57,31 +61,64 @@ const PricingDetails: React.FC<PricingDetailsProps> = ({
         </div>
       </div>
 
-      <div>
-        <label className="mb-2 block text-sm font-medium text-slate-700">
-          Amount (₹) <span className="text-red-500">*</span>
-        </label>
-        <div
-          className={`flex h-12 items-center gap-2 rounded-xl border bg-white px-4 ${
-            errors.amount
-              ? "border-red-400"
-              : "border-slate-300 focus-within:border-indigo-500"
-          }`}
-        >
-          <span className="text-slate-400">₹</span>
-          <input
-            type="text"
-            value={form.amount}
-            onChange={(e) => onInputChange("amount", e.target.value)}
-            placeholder="999"
-            className="h-full w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
-          />
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+        {/* Base Amount */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Base Amount (₹) <span className="text-red-500">*</span>
+          </label>
+          <div
+            className={`flex h-12 items-center gap-2 rounded-xl border bg-white px-4 ${
+              errors.amount
+                ? "border-red-400"
+                : "border-slate-300 focus-within:border-indigo-500"
+            }`}
+          >
+            <span className="text-slate-400">₹</span>
+            <input
+              type="text"
+              value={form.amount}
+              onChange={(e) => onInputChange("amount", e.target.value)}
+              placeholder="999"
+              className="h-full w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+            />
+          </div>
+          <p className="mt-1 text-xs text-slate-400">Plan price before GST</p>
+          {errors.amount && (
+            <p className="mt-1 text-xs font-medium text-red-500">
+              {errors.amount}
+            </p>
+          )}
         </div>
-        {errors.amount && (
-          <p className="mt-1 text-xs font-medium text-red-500">
-            {errors.amount}
-          </p>
-        )}
+
+        {/* GST Percentage */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            GST Percentage <span className="text-red-500">*</span>
+          </label>
+          <div
+            className={`flex h-12 items-center gap-2 rounded-xl border bg-white px-4 ${
+              errors.gstPercent
+                ? "border-red-400"
+                : "border-slate-300 focus-within:border-indigo-500"
+            }`}
+          >
+            <input
+              type="text"
+              value={form.gstPercent}
+              onChange={(e) => onInputChange("gstPercent", e.target.value)}
+              placeholder="18"
+              className="h-full w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+            />
+            <span className="text-slate-400 font-medium">%</span>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">Standard GST is 18%</p>
+          {errors.gstPercent && (
+            <p className="mt-1 text-xs font-medium text-red-500">
+              {errors.gstPercent}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Buttons - Bottom Right */}

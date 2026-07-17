@@ -266,9 +266,9 @@ const PlansTable: React.FC<Props> = ({ plans, onEdit, onDelete, onUpdate }) => {
                   ) : (
                     <div className="flex gap-4">
                       <button
-                        onClick={() => startInlineEdit(plan)}
+                        onClick={() => onEdit(plan)}
                         className="text-indigo-600 hover:text-indigo-800"
-                        title="Edit Inline"
+                        title="Edit Plan"
                       >
                         <Pencil size={16} />
                       </button>

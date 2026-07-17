@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ArrowRight, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import axios from "axios";
 import logo from "../assests/logo.png";
 import { API_BASE_URL } from "@/pages/Services/api/api";
@@ -102,7 +102,16 @@ export default function Individual() {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center px-4 sm:px-6">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center px-4 sm:px-6 relative">
+      {/* Floating Back Button */}
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-slate-600 hover:text-purple-600 shadow-sm border border-slate-200/50 hover:shadow-md transition-all duration-300 font-semibold text-sm cursor-pointer"
+      >
+        <ArrowLeft size={16} />
+        Back to Home
+      </button>
+
       <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* LEFT SIDE */}
         <div className="space-y-6 text-center md:text-left">

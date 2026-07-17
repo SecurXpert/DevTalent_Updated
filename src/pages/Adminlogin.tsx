@@ -10,6 +10,7 @@ import {
   Shield,
   Users,
   ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import { API_BASE_URL } from "@/pages/Services/api/api";
 import { useProfile } from "../contexts/ProfileContext";
@@ -78,8 +79,17 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 w-full overflow-x-hidden font-sans">
+    <div className="min-h-screen flex bg-slate-50 w-full overflow-x-hidden font-sans relative">
       
+      {/* Floating Back Button */}
+      <button 
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-slate-600 hover:text-purple-600 shadow-sm border border-slate-200/50 hover:shadow-md transition-all duration-300 font-semibold text-sm cursor-pointer"
+      >
+        <ArrowLeft size={16} />
+        Back to Home
+      </button>
+
       {/* LEFT SIDE: Promotional & Branding Panel */}
       <div className="w-1/2 hidden lg:flex flex-col justify-center items-center relative px-10 bg-gradient-to-br from-[#f5f3ff] via-[#faf5ff] to-[#fdf4ff] border-r border-purple-100/50">
         

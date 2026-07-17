@@ -69,6 +69,7 @@ const Landing = () => {
   const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const mobileDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchColleges = async () => {
@@ -90,8 +91,8 @@ const Landing = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) &&
+        (!mobileDropdownRef.current || !mobileDropdownRef.current.contains(event.target as Node))
       ) {
         setIsLoginDropdownOpen(false);
         setIsAdminDropdownOpen(false);
@@ -609,7 +610,7 @@ const Landing = () => {
                 ))}
               </nav>
 
-              <div className="flex flex-col space-y-2 sm:space-y-3 px-2">
+              <div ref={mobileDropdownRef} className="flex flex-col space-y-2 sm:space-y-3 px-2">
                 <div className="relative w-full">
                   <Button
                     onClick={() => setIsLoginDropdownOpen(!isLoginDropdownOpen)}
@@ -640,7 +641,7 @@ const Landing = () => {
 
                       <button
                         onClick={() => {
-                          navigate("/studentdashboard");
+                          navigate("/individual");
                           setIsLoginDropdownOpen(false);
                           setIsMobileMenuOpen(false);
                         }}
@@ -675,7 +676,7 @@ const Landing = () => {
                     <div className="mt-2 w-full bg-white rounded-md shadow-lg border">
                       <button
                         onClick={() => {
-                          navigate("/register-individual");
+                          navigate("/register");
                           setIsRegisterOpen(false);
                           setIsMobileMenuOpen(false);
                         }}
@@ -686,7 +687,7 @@ const Landing = () => {
 
                       <button
                         onClick={() => {
-                          navigate("/register-student");
+                          navigate("/registration");
                           setIsRegisterOpen(false);
                           setIsMobileMenuOpen(false);
                         }}

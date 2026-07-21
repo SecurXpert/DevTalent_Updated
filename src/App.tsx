@@ -47,6 +47,7 @@ import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import SidebarLayout from "./components/SidebarLayout";
 import StudentSidebarLayout from "./components/StudentSidebarLayout";
 import Subscriptions from "./pages/Subscriptions";
+import AdminSubscriptions from "./pages/Subscriptions/AdminSubscriptions";
 import Result from "./pages/Results/index";
 import ResultDetails from "./pages/Results/ResultDetails";
 import Notifications from "./pages/Notifications/Notifications";
@@ -347,6 +348,16 @@ const App = () => (
                 <AdminRoute>
                   <SidebarLayout>
                     <Subscriptions />
+                  </SidebarLayout>
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin-subscriptions"
+              element={
+                <AdminRoute>
+                  <SidebarLayout>
+                    <AdminSubscriptions />
                   </SidebarLayout>
                 </AdminRoute>
               }

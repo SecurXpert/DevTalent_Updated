@@ -1,7 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Crown, CheckCircle } from "lucide-react";
 
 export const UpgradeBanner: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-[#1E1B4B] to-[#312E81] rounded-3xl p-8 shadow-2xl border border-indigo-500/20 group">
       {/* BACKGROUND EFFECTS */}
@@ -32,7 +34,10 @@ export const UpgradeBanner: React.FC = () => {
           </p>
 
           {/* BUTTON */}
-          <button className="bg-gradient-to-r from-[#FACC15] to-[#D97706] text-[#111827] font-semibold py-2.5 px-8 rounded-xl shadow-md hover:opacity-90 transition min-w-[200px]">
+          <button 
+            onClick={() => navigate('/payments')}
+            className="bg-gradient-to-r from-[#FACC15] to-[#D97706] text-[#111827] font-semibold py-2.5 px-8 rounded-xl shadow-md hover:opacity-90 transition min-w-[200px]"
+          >
             Upgrade Now
           </button>
         </div>

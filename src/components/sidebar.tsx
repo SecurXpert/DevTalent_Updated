@@ -14,8 +14,8 @@ import {
   BookOpen,
   X,
   Shield,
-  ChevronLeft,
-  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   LogOut,
 } from "lucide-react";
 
@@ -115,7 +115,7 @@ export default function Sidebar() {
               onClick={toggleDesktop}
               className={`hidden lg:flex p-1 rounded-md hover:bg-gray-200 text-gray-600 transition-colors ${isDesktopCollapsed ? "mx-auto" : ""}`}
             >
-              {isDesktopCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+              {isDesktopCollapsed ? <ChevronsRight size={20} /> : <ChevronsLeft size={20} />}
             </button>
             {/* Mobile Close Button */}
             <button

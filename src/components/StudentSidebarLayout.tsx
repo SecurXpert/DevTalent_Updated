@@ -228,8 +228,8 @@ export default function StudentSidebarLayout({ children }: StudentSidebarLayoutP
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 lg:ml-64 bg-gradient-to-br from-purple-50 via-white to-purple-100 min-h-screen relative flex flex-col">
-        {/* NAVBAR - only show on Dashboard */}
-        {location.pathname.toLowerCase() === "/studentdashboard" && (
+        {/* NAVBAR - only show on Dashboard. On other pages, show a mobile-only top navbar to allow menu toggling */}
+        {location.pathname.toLowerCase() === "/studentdashboard" ? (
           <nav className="fixed top-0 left-0 lg:left-64 right-0 bg-white shadow-sm border-b z-40">
             <div className="flex justify-between lg:justify-end items-center px-4 sm:px-6 h-20 sm:h-24">
               <div className="flex items-center gap-3 lg:hidden">
@@ -266,6 +266,32 @@ export default function StudentSidebarLayout({ children }: StudentSidebarLayoutP
                   <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
+            </div>
+          </nav>
+        ) : (
+          <nav className="lg:hidden sticky top-0 bg-white shadow-sm border-b z-40 h-16 flex items-center justify-between px-4 sm:px-6">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="p-2 -ml-2 rounded-lg text-gray-600 hover:bg-gray-100"
+              >
+                <Menu size={24} />
+              </button>
+              <img
+                src={Devlogo}
+                alt="logo"
+                className="w-10 h-10 object-contain"
+              />
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => handleNavigation("/profile")}
+                className="flex items-center gap-2 font-medium text-gray-700 hover:text-purple-700 transition"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm">{studentName}</span>
+              </button>
             </div>
           </nav>
         )}

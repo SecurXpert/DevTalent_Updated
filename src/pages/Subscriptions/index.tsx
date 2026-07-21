@@ -33,6 +33,8 @@ type PlanItem = {
 
 type ActiveSubscriptionItem = {
   id: number;
+  studentId?: number;
+  studentEmail?: string;
   institution: string;
   planType: string;
   startDate: string;
@@ -448,6 +450,8 @@ const Subscriptions: React.FC = () => {
 
         const transformedSubscriptions: ActiveSubscriptionItem[] = itemsArray.map((sub: any, index: number) => ({
           id: sub.subscription_id || Date.now() + index,
+          studentId: sub.student_id,
+          studentEmail: sub.student_email,
           institution: sub.student_name || 'Unknown',
           planType: sub.plan_name || 'Unknown',
           startDate: sub.start_at ? sub.start_at.split('T')[0] : '',

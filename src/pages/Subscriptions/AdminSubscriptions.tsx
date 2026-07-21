@@ -3,21 +3,30 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "@/pages/Services/api/api";
 import { BookOpen } from "lucide-react";
 
-import { SubscriptionNavbar } from "./SubscriptionComponents/SubscriptionNavbar";
-import { SingleCourseCard } from "./SubscriptionComponents/SingleCourseCard";
-import { DualCourseCard } from "./SubscriptionComponents/DualCourseCard";
-import { TripleCourseCard } from "./SubscriptionComponents/TripleCourseCard";
-import { PriceSummary } from "./SubscriptionComponents/PriceSummary";
+import { SubscriptionNavbar } from "./AdminSubscriptionComponents/SubscriptionNavbar";
+import { SingleCourseCard } from "./AdminSubscriptionComponents/SingleCourseCard";
+import { DualCourseCard } from "./AdminSubscriptionComponents/DualCourseCard";
+import { TripleCourseCard } from "./AdminSubscriptionComponents/TripleCourseCard";
+import { PriceSummary } from "./AdminSubscriptionComponents/PriceSummary";
 
 type PlanType = "single" | "dual" | "triple";
 
-export default function Subscription() {
+export default function AdminSubscriptions() {
   const location = useLocation();
   const navigate = useNavigate();
   const state =
-    (location.state as { userEmail?: string; userName?: string }) || {};
-  const [userEmail, setUserEmail] = useState(state.userEmail || "user@example.com");
-  const [userName, setUserName] = useState(state.userName || "User");
+    (location.state as {
+      studentId?: number;
+      userEmail?: string;
+      userName?: string;
+      currentPlanName?: string;
+      actionType?: "update" | "renew";
+    }) || {};
+  const studentId = state.studentId;
+  const userEmail = state.userEmail || "user@example.com";
+  const userName = state.userName || "User";
+  const currentPlanName = state.currentPlanName;
+  const actionType = state.actionType;
   const [plan, setPlan] = useState<PlanType>("single");
   const [courseType, setCourseType] = useState("Technical");
   const [selectedCourses, setSelectedCourses] = useState<string[]>([
@@ -51,42 +60,6 @@ export default function Subscription() {
         const token =
           localStorage.getItem("access_token") ||
           localStorage.getItem("userToken");
-
-        if (token) {
-          let studentId = "";
-          try {
-            const payload = JSON.parse(atob(token.split(".")[1]));
-            studentId = String(payload.user_id || payload.id || payload.candidate_id || payload.sub || "");
-          } catch (e) {
-            console.error("Error decoding token for student ID", e);
-          }
-
-          if (studentId) {
-            try {
-              const profileResponse = await fetch(
-                `${API_BASE_URL}/student/students/${studentId}`,
-                {
-                  method: "GET",
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-              if (profileResponse.ok) {
-                const profileData = await profileResponse.json();
-                if (profileData.full_name) {
-                  setUserName(profileData.full_name);
-                }
-                if (profileData.email_id) {
-                  setUserEmail(profileData.email_id);
-                }
-              }
-            } catch (err) {
-              console.warn("Could not fetch student profile:", err);
-            }
-          }
-        }
 
         // Fetch Plans
         const plansResponse = await fetch(`${API_BASE_URL}/student/plans`, {
@@ -337,6 +310,71 @@ export default function Subscription() {
     }
   };
 
+  const handleAssignPlanDirectly = async () => {
+    if (!studentId) {
+      alert("No student selected to assign this plan to. Please return to the Subscriptions list and click Update/Renew.");
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      const adminToken = localStorage.getItem("adminToken");
+      if (!adminToken) {
+        alert("Admin session not found. Please log in as admin first.");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Resolve Selected Plan ID
+      let selectedPlanId: any =
+        plan === "single"
+          ? singlePlans.find((p) => p.exams === selectedExam)?.id
+          : plan === "dual"
+            ? dualId
+            : tripleId;
+
+      if (!selectedPlanId && plan === "single" && singlePlans.length > 0) {
+        selectedPlanId = singlePlans[0].id;
+      }
+
+      if (!selectedPlanId) {
+        alert("Please select a valid plan.");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Call Admin Assign Subscription API
+      const response = await fetch(
+        `${API_BASE_URL}/student/admin/subscriptions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            student_id: Number(studentId),
+            plan_id: Number(selectedPlanId),
+            is_active: true,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert(`Plan assigned successfully to ${userName}!`);
+        navigate("/subscriptions");
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(`Failed to assign plan: ${errorData.detail || errorData.message || "Unknown error"}`);
+      }
+    } catch (error: any) {
+      console.error("Assign error:", error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // Calculate Price
   const basePrice =
     plan === "single"
@@ -370,15 +408,44 @@ export default function Subscription() {
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200">
       <SubscriptionNavbar userName={userName} userEmail={userEmail} />
 
+      {/* Admin Control Banner */}
+      {studentId && (
+        <div className="max-w-7xl mx-auto px-6 mt-6">
+          <div className="bg-purple-50 border-l-4 border-purple-600 p-4 rounded-r-xl shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="font-bold text-purple-900">
+                  Admin Control Mode: {actionType === "update" ? "Upgrading Plan" : "Renewing Subscription"}
+                </h4>
+                <p className="text-sm text-purple-700 mt-1">
+                  Student Name: <strong>{userName}</strong> | Email: <strong>{userEmail}</strong> | Student ID: <strong>{studentId}</strong>
+                </p>
+                {currentPlanName && (
+                  <p className="text-xs text-purple-500 mt-0.5">
+                    Current Active Plan: <strong>{currentPlanName}</strong>
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={() => navigate("/subscriptions")}
+                className="text-xs text-purple-700 hover:text-purple-900 font-semibold underline"
+              >
+                Cancel & Back
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MAIN CONTENT */}
       <div className="p-6">
         {/* TITLE */}
         <div className="text-center mb-10">
           <h2 className="text-3xl font-bold text-purple-700">
-            Subscription Plans
+            Admin Subscription Plans
           </h2>
           <p className="text-gray-500 mt-2">
-            Choose the perfect plan for your learning journey
+            Configure or view platform plans for learning journeys
           </p>
         </div>
 
@@ -419,6 +486,9 @@ export default function Subscription() {
           totalCourses={totalCourses}
           isProcessing={isProcessing}
           handleBuyNow={handleBuyNow}
+          handleAssignPlanDirectly={handleAssignPlanDirectly}
+          studentId={studentId}
+          actionType={actionType}
           navigate={navigate}
         />
       </div>

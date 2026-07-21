@@ -1,8 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { MoreHorizontal } from "lucide-react";
 
 type ActiveSubscriptionItem = {
   id: number;
+  studentId?: number;
+  studentEmail?: string;
   institution: string;
   planType: string;
   startDate: string;
@@ -20,6 +23,7 @@ type ActiveSubscriptionsTableProps = {
 const ActiveSubscriptionsTable: React.FC<ActiveSubscriptionsTableProps> = ({
   subscriptions,
 }) => {
+  const navigate = useNavigate();
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[900px]">
@@ -109,27 +113,40 @@ const ActiveSubscriptionsTable: React.FC<ActiveSubscriptionsTableProps> = ({
               {/* Actions */}
               <td className="px-6 py-5">
                 <div className="flex items-center gap-4">
-                  <a
-                    href="#"
-                    className="hover:opacity-80 text-sm font-medium"
+                  <button
+                    onClick={() =>
+                      navigate("/admin-subscriptions", {
+                        state: {
+                          studentId: item.studentId,
+                          userName: item.institution,
+                          userEmail: item.studentEmail,
+                          currentPlanName: item.planType,
+                          actionType: "update"
+                        },
+                      })
+                    }
+                    className="hover:opacity-80 text-sm font-medium focus:outline-none bg-transparent border-none cursor-pointer"
                     style={{ color: "#4F39F6" }}
                   >
                     Update
-                  </a>
-                  <a
-                    href="#"
-                    className="hover:opacity-80 text-sm font-medium"
+                  </button>
+                  <button
+                    onClick={() =>
+                      navigate("/admin-subscriptions", {
+                        state: {
+                          studentId: item.studentId,
+                          userName: item.institution,
+                          userEmail: item.studentEmail,
+                          currentPlanName: item.planType,
+                          actionType: "renew"
+                        },
+                      })
+                    }
+                    className="hover:opacity-80 text-sm font-medium focus:outline-none bg-transparent border-none cursor-pointer"
                     style={{ color: "#155DFC" }}
                   >
                     Renew
-                  </a>
-                  <a
-                    href="#"
-                    className="hover:opacity-80 text-sm font-medium"
-                    style={{ color: "#E7000B" }}
-                  >
-                    Suspend
-                  </a>
+                  </button>
                 </div>
               </td>
             </tr>

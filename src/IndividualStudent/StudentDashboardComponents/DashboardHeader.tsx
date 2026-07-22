@@ -68,12 +68,22 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const nextExam = unattemptedExams.length > 0 ? unattemptedExams[0] : null;
 
   const handleStartExam = () => {
-    if (!nextExam) return;
-    if (nextExam.type === "MCQ") {
-      navigate("/mcq-exam", { state: { examId: nextExam.id } });
+    let targetCourseId = "1";
+    if (subscription?.selected_courses?.length > 0) {
+      const matchedCourse = subscription.selected_courses.find((c: any) =>
+        c.course_name?.toLowerCase().includes(course.toLowerCase())
+      );
+      if (matchedCourse) {
+        targetCourseId = String(matchedCourse.course_id);
+      } else {
+        targetCourseId = String(subscription.selected_courses[0].course_id);
+      }
     } else {
-      navigate("/individualcompiler", { state: { examId: nextExam.id } });
+      targetCourseId = course === "Technical" ? "1" : "2";
     }
+    localStorage.setItem("selectedCourseId", targetCourseId);
+    navigate(`/individualterms/${targetCourseId}`);
+    window.scrollTo(0, 0);
   };
   return (
     <div className="rounded-3xl overflow-hidden bg-[#0A0520] text-white relative shadow-2xl flex flex-col md:flex-row mt-3">

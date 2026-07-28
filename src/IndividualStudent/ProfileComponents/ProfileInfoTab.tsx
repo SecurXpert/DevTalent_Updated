@@ -46,6 +46,7 @@ interface ProfileInfoTabProps {
   handleSaveProfile: () => void;
   courses: string[];
   toggleCourse: (course: string) => void;
+  subscriptionData?: any;
 }
 
 export const ProfileInfoTab: React.FC<ProfileInfoTabProps> = ({
@@ -56,6 +57,7 @@ export const ProfileInfoTab: React.FC<ProfileInfoTabProps> = ({
   handleSaveProfile,
   courses,
   toggleCourse,
+  subscriptionData,
 }) => {
   return (
     <div className="bg-white rounded-xl shadow p-6 space-y-4">
@@ -113,20 +115,19 @@ export const ProfileInfoTab: React.FC<ProfileInfoTabProps> = ({
         </div>
 
         {/* BUTTONS */}
-        <div className="flex gap-2">
-          {["Technical", "Non-Technical"].map((c) => (
-            <button
-              key={c}
-              onClick={() => toggleCourse(c)}
-              className={`px-3 py-1 text-xs rounded-full border transition ${
-                courses.includes(c)
-                  ? "bg-purple-600 text-white"
-                  : "bg-purple-100 text-purple-600"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          {subscriptionData?.selected_courses && subscriptionData.selected_courses.length > 0 ? (
+            subscriptionData.selected_courses.map((c: any) => (
+              <span
+                key={c.course_id}
+                className="px-3 py-1 text-xs rounded-full border border-purple-600 bg-white text-purple-600"
+              >
+                {c.course_name}
+              </span>
+            ))
+          ) : (
+            <span className="text-xs text-gray-500">No courses opted yet</span>
+          )}
         </div>
 
         {/* HELP TEXT */}

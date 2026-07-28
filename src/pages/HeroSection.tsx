@@ -13,7 +13,7 @@ const HeroSection = ({ onLoginClick }: HeroSectionProps) => {
   return (
     <section
       id="home"
-      className="relative  flex items-center overflow-hidden py-8"
+      className="relative  flex items-center overflow-hidden pt-8"
     >
       {/* Top right gradient shade */}
       <div className="absolute top-0 right-0 w-[600px] h-[400px] bg-gradient-to-br from-white via-white to-transparent rounded-bl-full blur-3xl pointer-events-none" />

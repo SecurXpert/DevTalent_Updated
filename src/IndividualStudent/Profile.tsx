@@ -189,8 +189,7 @@ const Profile: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState<number>(0);
 
   React.useEffect(() => {
-    if (activeTab === "subscription") {
-      const fetchData = async () => {
+    const fetchData = async () => {
         try {
           const token = localStorage.getItem("access_token") || localStorage.getItem("userToken");
 
@@ -301,8 +300,7 @@ const Profile: React.FC = () => {
         }
       };
       fetchData();
-    }
-  }, [activeTab]);
+  }, []);
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -406,7 +404,9 @@ const Profile: React.FC = () => {
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`flex-1 py-2 rounded-full capitalize transition ${
-                    activeTab === tab && "bg-white shadow font-medium"
+                    activeTab === tab 
+                      ? "bg-purple-600 text-white shadow font-medium"
+                      : "text-gray-600 hover:text-purple-600"
                   }`}
                 >
                   {tab}
@@ -424,6 +424,7 @@ const Profile: React.FC = () => {
               handleSaveProfile={handleSaveProfile}
               courses={courses}
               toggleCourse={toggleCourse}
+              subscriptionData={subscriptionData}
             />
           )}
 

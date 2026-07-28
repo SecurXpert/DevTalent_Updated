@@ -11,11 +11,11 @@ interface DashboardHeaderProps {
   subscription?: any;
 }
 
-export const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
-  studentName, 
-  course = "Technical", 
+export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
+  studentName,
+  course = "Technical",
   courseExams = [],
-  codingExams = [], 
+  codingExams = [],
   attemptedExamIds = new Set(),
   subscription
 }) => {
@@ -61,7 +61,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   ];
 
   const unattemptedExams = allAvailableExams.filter(e => !attemptedExamIds.has(e.id || e.exam_id));
-  
+
   // Sort by created_at (oldest first, or however you want to prioritize)
   unattemptedExams.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
 
@@ -173,7 +173,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </div>
           </div>
 
-          <button 
+          <button
             disabled={!nextExam}
             onClick={handleStartExam}
             className={`w-full font-medium py-2.5 rounded-xl transition shadow-lg text-sm ${!nextExam ? 'bg-gray-600 text-gray-400 cursor-not-allowed' : 'bg-[#3B2875] hover:bg-[#4a3490] text-white'}`}
@@ -187,9 +187,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <div className="hidden lg:block w-[45%] relative">
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A0520] via-[#0A0520]/80 to-transparent z-10" />
         <img
-          src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop"
+          src="/img/796d96e180086075598a423f87e89416e86ec7aa.png"
           alt="Student studying"
-          className="w-full h-full object-cover object-left opacity-90"
+          className="w-full h-full object-cover object-right opacity-100"
         />
       </div>
     </div>

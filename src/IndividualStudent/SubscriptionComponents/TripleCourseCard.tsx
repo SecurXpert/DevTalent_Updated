@@ -23,7 +23,7 @@ export const TripleCourseCard: React.FC<TripleCourseCardProps> = ({
         plan === "triple" ? "border-yellow-500" : "border-transparent"
       }`}
     >
-      <span className="absolute -top-3 left-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full flex items-center gap-1">
+      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-black text-xs px-3 py-1 rounded-full flex items-center gap-1">
         <Crown size={12} />
         PREMIUM
       </span>

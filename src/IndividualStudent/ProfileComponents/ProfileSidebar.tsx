@@ -18,7 +18,7 @@ export const ProfileSidebar: React.FC<ProfileSidebarProps> = ({ form, dashboardS
         </div>
         <h2 className="mt-3 font-semibold">{form.fullName}</h2>
         <p className="text-gray-500 text-sm">{form.email}</p>
-        <span className="mt-3 inline-block text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full">
+        <span className="mt-3 inline-block text-xs bg-green-500 text-white px-3 py-1 rounded-full">
           Active Member
         </span>
       </div>

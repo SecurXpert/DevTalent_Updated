@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Menu, X, Globe, Brain } from "lucide-react";
+import { ArrowRight, Menu, X, Globe, Brain, User } from "lucide-react";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { MdLocationOn, MdEmail, MdPhone } from "react-icons/md";
@@ -433,9 +433,8 @@ const Landing = () => {
                     {/* Arrow */}
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isLoginDropdownOpen ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${isLoginDropdownOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </Button>
 
@@ -477,9 +476,8 @@ const Landing = () => {
                     Register As
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isRegisterOpen ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${isRegisterOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </Button>
 
@@ -513,7 +511,7 @@ const Landing = () => {
                 >
                   Contact us
                 </Button> */}
-             <div className="relative">
+                <div className="relative">
                   <Button
                     onClick={() => {
                       setIsAdminDropdownOpen(!isAdminDropdownOpen);
@@ -526,12 +524,12 @@ const Landing = () => {
     [background:linear-gradient(white,white)_padding-box,linear-gradient(90deg,#8020A9,#3E319E)_border-box]
     hover:shadow-md transition-all flex items-center justify-center gap-2"
                   >
+                    <User size={18} />
                     Admin Login
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isAdminDropdownOpen ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${isAdminDropdownOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </Button>
 
@@ -620,9 +618,8 @@ const Landing = () => {
                     Login As
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isLoginDropdownOpen ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${isLoginDropdownOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </Button>
 
@@ -663,12 +660,11 @@ const Landing = () => {
                     className="bg-gradient-to-r from-[#8A1EAB] to-[#39319D] text-white 
   px-4 py-2 text-sm font-medium w-full flex items-center justify-center gap-2"
                   >
-                    Register As   
+                    Register As
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isRegisterOpen ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${isRegisterOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </Button>
 
@@ -721,12 +717,12 @@ const Landing = () => {
     [background:linear-gradient(white,white)_padding-box,linear-gradient(90deg,#8020A9,#3E319E)_border-box]
     hover:shadow-md transition-all flex items-center justify-center gap-2"
                   >
+                    <User size={18} />
                     Admin Login
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isAdminDropdownOpen ? "rotate-180" : ""
-                      }`}
+                      className={`transition-transform duration-200 ${isAdminDropdownOpen ? "rotate-180" : ""
+                        }`}
                     />
                   </Button>
 

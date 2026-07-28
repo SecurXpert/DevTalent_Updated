@@ -23,7 +23,7 @@ export const DualCourseCard: React.FC<DualCourseCardProps> = ({
         plan === "dual" ? "border-purple-600" : "border-transparent"
       }`}
     >
-      <span className="absolute -top-3 left-4 bg-purple-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
+      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1">
         <Star size={12} />
         POPULAR
       </span>
